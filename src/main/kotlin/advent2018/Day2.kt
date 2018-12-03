@@ -3,20 +3,19 @@ package advent2018
 import java.io.File
 
 
-fun charCounts(charArr : CharArray) =
+fun charCounts(charArr : CharSequence, targets: Set<Int> = setOf(2, 3)) =
     charArr.groupBy { it }
         .values
-        .map (List<Char>::size)
-        .filter {l -> l == 2 || l == 3 }
+        .map { it.size }
+        .filter { targets.contains(it) }
         .distinct()
+
+fun countMapList(key: Int, map: Map<Int, List<Int>>) = (map[key]?:emptyList()).size
 
 fun main(args : Array<String>) : Unit {
     val count = File("src/main/resources/day2/input.txt").readLines()
-        .flatMap {l -> charCounts(l.toCharArray())}
-        .groupBy { x -> x }
-        //.collect(Collectors.groupingBy { it })
+        .flatMap { charCounts(it) }
+        .groupBy { it }
 
-
-    println("Hello ${count.getOrDefault(2, emptyList()).size *
-                    count.getOrDefault(3, emptyList()).size}")
+    println("Result ${countMapList(2, count) * countMapList(3, count)}")
 }
