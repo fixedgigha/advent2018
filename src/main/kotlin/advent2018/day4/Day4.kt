@@ -10,7 +10,7 @@ val guardRegex = Regex("Guard #(\\d+) begins shift")
 val timeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
 data class Sleep(val sleep: LocalDateTime, var wake: LocalDateTime? = null)
-class GuardSummary(val guard: Int, val events: List<Sleep>) {
+class GuardSummary(val guard: Int, events: List<Sleep>) {
     val totalSleep: Long
     val mostFrequentMinute: Map.Entry<Int, Int>
 
