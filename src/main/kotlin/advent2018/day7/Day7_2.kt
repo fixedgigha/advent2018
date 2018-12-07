@@ -56,7 +56,7 @@ fun main(args: Array<String>) {
     println("First wave $currentWave")
     val inPlay = mutableSetOf<Char>()
     var iteration = 0
-    while (currentWave.isNotEmpty() ) {
+    while (currentWave.isNotEmpty()) {
         inPlay.addAll(currentWave.map {it.letter})
         val nextWave = mutableListOf<Candidate>()
 
@@ -65,8 +65,8 @@ fun main(args: Array<String>) {
         }
         for (candidate in currentWave) {
             val nextSubsequents = subsequents[candidate.letter]
-            if (nextSubsequents != null) {
-                nextWave.addAll(nextSubsequents
+            nextSubsequents ?. let {
+                nextWave.addAll(it
                     .filter {
                         inPlay.containsAll(antecedents[it] ?: mutableListOf())
                     }
