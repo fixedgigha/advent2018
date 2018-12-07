@@ -64,12 +64,10 @@ fun main(args: Array<String>) {
         threads.forEachIndexed { x, thread ->  thread.add(iteration, currentWave.getOrElse(x) { NON_CANDIDATE } ) }
 
         for (candidate in currentWave) {
-            subsequents[candidate.letter] ?. let {
-                nextWave.addAll(it
-                    .filter {
-                        inPlay.containsAll(antecedents[it] ?: mutableListOf())
-                    }
-                    .map {Candidate(it, listOf(candidate))}
+            subsequents[candidate.letter] ?. let {subsequent ->
+                nextWave.addAll(subsequent
+                    .filter { antecedents[it]?.let { inPlay.containsAll(it) } ?: false }
+                    .map { Candidate(it, listOf(candidate)) }
                 )
             }
         }
