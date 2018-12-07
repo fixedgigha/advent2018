@@ -4,7 +4,7 @@ import java.io.File
 
 data class Candidate (val letter: Char, val immediatePredecessor: List<Candidate> = listOf()) {
     val score = letter.toInt() - 4
-    fun superScore(): Int {
+    private fun superScore(): Int {
         if (letter == '-') {
             return 0
         }
@@ -64,8 +64,7 @@ fun main(args: Array<String>) {
             threads[x].add(iteration, if (currentWave.size > x) currentWave[x] else NON_CANDIDATE)
         }
         for (candidate in currentWave) {
-            val nextSubsequents = subsequents[candidate.letter]
-            nextSubsequents ?. let {
+            subsequents[candidate.letter] ?. let {
                 nextWave.addAll(it
                     .filter {
                         inPlay.containsAll(antecedents[it] ?: mutableListOf())
