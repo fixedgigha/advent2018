@@ -5,9 +5,15 @@ import java.io.File
 val lineRegex = Regex("Step ([A-Z]) must be finished before step ([A-Z]) can begin\\.")
 
 fun main(args: Array<String>) {
-    val (antecedents, subsequents, candidates) = File("src/main/resources/day7/testInput.txt")
+    val (antecedents, subsequents, candidates) = File("src/main/resources/day7/input.txt")
         .readLines()
-        .fold(Triple(mutableMapOf<Char,MutableList<Char>>(), mutableMapOf<Char,MutableList<Char>>(), mutableSetOf<Char>())) { (antecedents, subsequents, candidates), line ->
+        .fold(
+            Triple(
+                mutableMapOf<Char, MutableList<Char>>(),
+                mutableMapOf<Char, MutableList<Char>>(),
+                mutableSetOf<Char>()
+            )
+        ) { (antecedents, subsequents, candidates), line ->
             val match = lineRegex.matchEntire(line)
             if (match != null) {
                 val antecedent = match.groupValues[1][0]
@@ -23,6 +29,24 @@ fun main(args: Array<String>) {
 
             Triple(antecedents, subsequents, candidates)
         }
-    val candidatesWithNoAntecedents = candidates.filter { !antecedents.contains(it)}
+    val candidatesWithNoAntecedents = mutableListOf<Char>()
+    candidatesWithNoAntecedents.addAll(candidates.filter { !antecedents.contains(it) })
     println("No antecedents $candidatesWithNoAntecedents")
+    val result = mutableListOf<Char>()
+    val inPlay = mutableSetOf<Char>()
+    while (candidatesWithNoAntecedents.isNotEmpty() ) {
+        inPlay.addAll(candidatesWithNoAntecedents)
+        candidatesWithNoAntecedents.sort()
+        val next = candidatesWithNoAntecedents.removeAt(0)
+        result.add(next)
+        val nextSubsequents = subsequents[next]
+        if (nextSubsequents != null) {
+            val newCandidates = nextSubsequents.filter {
+                (!inPlay.contains(it)) &&
+                result.containsAll(antecedents[it] ?: mutableListOf())
+            }
+            candidatesWithNoAntecedents.addAll(newCandidates)
+        }
+    }
+    println("Result $result")
 }
