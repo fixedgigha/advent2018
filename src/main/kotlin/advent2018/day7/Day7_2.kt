@@ -2,16 +2,20 @@ package advent2018.day7
 
 import java.io.File
 
-data class Candidate (val letter: Char, val immediatePredecessor: List<Candidate> = listOf()) {
+data class Candidate (val letter: Char, val predecessors: List<Candidate> = listOf()) {
     private val score = letter.toInt() - 4
     private fun superScore(): Int {
-        if (letter == '-') {
-            return 0
+        return if (letter == '-') {
+             0
         }
-        return score + immediatePredecessor.fold(0) { running: Int, current: Candidate -> Math.max(running, current.superScore())}
+        else {
+            score + predecessors.fold(0) { running: Int, current: Candidate ->
+                Math.max(running, current.superScore())
+            }
+        }
     }
 
-    override fun toString() = "Letter $letter predecessors ${immediatePredecessor.map {it.letter}} score ${superScore()}"
+    override fun toString() = "Letter $letter predecessors ${predecessors.map {it.letter}} score ${superScore()}"
 }
 
 val NON_CANDIDATE = Candidate('-')
@@ -31,10 +35,8 @@ fun loadData() = File("src/main/resources/day7/input.txt")
             candidates.add(antecedent)
             candidates.add(subsequent)
 
-            antecedents[subsequent] = antecedents.getOrDefault(subsequent, mutableListOf())
-            antecedents[subsequent]?.add(antecedent)
-            subsequents[antecedent] = subsequents.getOrDefault(antecedent, mutableListOf())
-            subsequents[antecedent]?.add(subsequent)
+            antecedents.getOrPut(subsequent) { mutableListOf() } .add(antecedent)
+            subsequents.getOrPut(antecedent) { mutableListOf() } .add(subsequent)
         }
 
         Triple(antecedents, subsequents, candidates)
@@ -59,9 +61,8 @@ fun main(args: Array<String>) {
         inPlay.addAll(currentWave.map {it.letter})
         val nextWave = mutableListOf<Candidate>()
 
-        for (x in 0..threads.lastIndex) {
-            threads[x].add(iteration, if (currentWave.size > x) currentWave[x] else NON_CANDIDATE)
-        }
+        threads.forEachIndexed { x, thread ->  thread.add(iteration, if (currentWave.size > x) currentWave[x] else NON_CANDIDATE) }
+
         for (candidate in currentWave) {
             subsequents[candidate.letter] ?. let {
                 nextWave.addAll(it
@@ -73,7 +74,7 @@ fun main(args: Array<String>) {
             }
         }
         currentWave.clear()
-        val mergedNext = nextWave.groupBy { it.letter } .map { entry -> Candidate(entry.key, entry.value.flatMap{it.immediatePredecessor})}
+        val mergedNext = nextWave.groupBy { it.letter } .map { entry -> Candidate(entry.key, entry.value.flatMap{it.predecessors})}
         currentWave.addAll(mergedNext)
         iteration++
     }
