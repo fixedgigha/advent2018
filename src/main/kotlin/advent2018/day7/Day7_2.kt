@@ -3,7 +3,7 @@ package advent2018.day7
 import java.io.File
 
 data class Candidate (val letter: Char, val immediatePredecessor: List<Candidate> = listOf()) {
-    val score = letter.toInt() - 4
+    private val score = letter.toInt() - 4
     private fun superScore(): Int {
         if (letter == '-') {
             return 0
@@ -25,8 +25,7 @@ fun loadData() = File("src/main/resources/day7/input.txt")
             mutableSetOf<Char>()
         )
     ) { (antecedents, subsequents, candidates), line ->
-        val match = lineRegex.matchEntire(line)
-        if (match != null) {
+        lineRegex.matchEntire(line) ?. let { match ->
             val antecedent = match.groupValues[1][0]
             val subsequent = match.groupValues[2][0]
             candidates.add(antecedent)
