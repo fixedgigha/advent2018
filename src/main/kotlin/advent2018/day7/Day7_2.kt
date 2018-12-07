@@ -61,7 +61,7 @@ fun main(args: Array<String>) {
         inPlay.addAll(currentWave.map {it.letter})
         val nextWave = mutableListOf<Candidate>()
 
-        threads.forEachIndexed { x, thread ->  thread.add(iteration, if (currentWave.size > x) currentWave[x] else NON_CANDIDATE) }
+        threads.forEachIndexed { x, thread ->  thread.add(iteration, currentWave.getOrElse(x) { NON_CANDIDATE } ) }
 
         for (candidate in currentWave) {
             subsequents[candidate.letter] ?. let {
