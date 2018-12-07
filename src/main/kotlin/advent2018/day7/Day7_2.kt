@@ -5,9 +5,7 @@ import java.io.File
 data class Candidate (val letter: Char, val predecessors: List<Candidate> = listOf()) {
     private val score = letter.toInt() - 4
     private fun superScore(): Int {
-        return if (letter == '-') {
-             0
-        }
+        return if (letter == '-') { 0 }
         else {
             score + predecessors.fold(0) { running: Int, current: Candidate ->
                 Math.max(running, current.superScore())
@@ -59,17 +57,16 @@ fun main(args: Array<String>) {
     var iteration = 0
     while (currentWave.isNotEmpty()) {
         inPlay.addAll(currentWave.map {it.letter})
-        val nextWave = mutableListOf<Candidate>()
-
         threads.forEachIndexed { x, thread ->  thread.add(iteration, currentWave.getOrElse(x) { NON_CANDIDATE } ) }
 
-        for (candidate in currentWave) {
+        val nextWave = currentWave.fold(mutableListOf<Candidate>()) { nextWave, candidate ->
             subsequents[candidate.letter] ?. let {subsequent ->
                 nextWave.addAll(subsequent
                     .filter { antecedents[it]?.let { inPlay.containsAll(it) } ?: false }
                     .map { Candidate(it, listOf(candidate)) }
                 )
             }
+            nextWave
         }
         currentWave.clear()
         val mergedNext = nextWave.groupBy { it.letter } .map { entry -> Candidate(entry.key, entry.value.flatMap{it.predecessors})}
