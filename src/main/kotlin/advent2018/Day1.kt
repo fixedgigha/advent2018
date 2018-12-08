@@ -4,8 +4,8 @@ import java.io.File
 
 fun main(args: Array<String>): Unit {
     val count = File("src/main/resources/day1/input.txt").readLines()
-        .map {it.toInt()}
-        .fold(0, Int::plus)
+        .map { it.toInt() }
+        .sum()
 
     println("Hello $count")
 }
