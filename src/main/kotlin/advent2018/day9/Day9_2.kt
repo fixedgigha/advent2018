@@ -30,7 +30,6 @@ fun main(args: Array<String>) {
     for (m in 2..7083300) {
         if (m % 23 == 0) {
             val scoringNode = scoringNode()
-            println("Scoring $scoringNode")
             scores[currentPlayer] =  scores.getOrPut(currentPlayer) { -> 0} + m + scoringNode.value
             scoringNode.prev?.next = scoringNode.next
             scoringNode.next?.prev = scoringNode.prev
