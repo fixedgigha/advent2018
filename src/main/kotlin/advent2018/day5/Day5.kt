@@ -4,10 +4,10 @@ import java.io.File
 
 fun swapCase(c : Char): Char = if (c.isUpperCase()) c.toLowerCase() else c.toUpperCase()
 
-val NUL = 0.toChar()
+const val NUL = 0.toChar()
 
 fun react(input : String, remove: Char): Int {
-    var text = input.toCharArray()
+    var text = input.toCharArray()s
     var length = 0
     while (length == 0) {
         for (x in 0..(text.size - 2)) {

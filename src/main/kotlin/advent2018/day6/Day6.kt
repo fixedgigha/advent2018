@@ -9,17 +9,13 @@ fun main(args: Array<String>) {
     var (coords, maxCoords) = File("src/main/resources/day6/input.txt")
         .readLines()
         .fold(Pair(mutableListOf<Pair<Int, Int>>(), Pair(0, 0))) { (list, maxCoords), line ->
-            val mr = lineRegex.matchEntire(line)
-            val newMaxCoords: Pair<Int, Int>
-            if (mr != null) {
-                val x = mr.groupValues[1].toInt()
-                val y = mr.groupValues[2].toInt()
-                list.add(Pair(x, y))
-                newMaxCoords = Pair(Math.max(x, maxCoords.first), Math.max(y, maxCoords.second))
-            }
-            else {
-                newMaxCoords = maxCoords
-            }
+            val newMaxCoords =
+                lineRegex.matchEntire(line) ?. let { mr ->
+                    val x = mr.groupValues[1].toInt()
+                    val y = mr.groupValues[2].toInt()
+                    list.add(Pair(x, y))
+                    Pair(Math.max(x, maxCoords.first), Math.max(y, maxCoords.second))
+                } ?: maxCoords
             Pair(list, newMaxCoords)
         }
     val grid = mutableMapOf<Pair<Int, Int>, Int>()
@@ -39,7 +35,7 @@ fun main(args: Array<String>) {
     println("Winner $winner")
 }
 
-val tieMarker = -1
+const val tieMarker = -1
 
 fun nearestCoord(thisCoord: Pair<Int, Int>, coords: MutableList<Pair<Int, Int>>): Int {
     val (closest, closestScore) =
