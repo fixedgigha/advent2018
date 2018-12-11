@@ -1,4 +1,4 @@
-package advent2018
+package advent2018.day10
 
 import java.io.File
 
@@ -57,7 +57,7 @@ fun pointsToGrid(input: List<Pair<Int, Int>>)  {
 
 
 fun main(args: Array<String>) {
-    val coords = File("src/main/resources/day10/input.txt").readLines().map { processInput(it)}
+    val coords = File("src/main/resources/day10/input.txt").readLines().map { processInput(it) }
 
     for (n in 1 .. 100000) {
         val points = coords.map { co -> pointAfterSecond(co, n) }
