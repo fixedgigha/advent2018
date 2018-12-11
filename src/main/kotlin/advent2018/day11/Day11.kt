@@ -11,13 +11,20 @@ fun cellScore(x: Int, y: Int): Int {
     return hundred - 5
 }
 
-val cellScores = mutableMapOf<Pair<Int, Int>, Int>()
+val cellScores = mutableMapOf<Triple<Int, Int, Int>, Int>()
 
 fun gridScore(x: Int, y: Int, size: Int): Int {
-    var score = 0
-    for (a in 0..(size - 1))
-        for (b in 0..(size - 1))
-            score += cellScores.getOrPut(Pair(x + a, y + b)) { cellScore(x + a, y + b)}
+    val score =
+        if (size == 1) {
+            cellScore(x, y)
+        }
+        else {
+            (cellScores.remove(Triple(x, y, size - 1)) ?: Int.MIN_VALUE) +
+            (0..(size - 1)).map {a -> cellScore(x + size - 1, y + a) +
+                                      cellScore(x + a, y + size - 1) }.sum()
+        }
+    if (x < (301 - size) && y < (301 - size))
+        cellScores[Triple(x, y, size)] =  score
     return score
 }
 
@@ -27,7 +34,7 @@ fun main(args: Array<String>) {
     var currentHighest = Int.MIN_VALUE
     var currentXY = Triple(0, 0, 0)
     for (size in 1 .. 300) {
-        println(">>> $size $currentXY ${cellScores.size}")
+        println(">>> $size $currentXY $currentHighest")
         for (x in 1..(301 - size))
             for (y in 1..(301 - size)) {
                 val gridScore = gridScore(x, y, size)
