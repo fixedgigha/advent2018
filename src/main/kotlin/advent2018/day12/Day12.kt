@@ -1,7 +1,5 @@
 package advent2018.day12
 
-import io.vavr.API
-
 fun add(x: Int, y: Int) = x + y
 
 val initialState = "##..#.#.#..##..#..##..##..#.#....#.....##.#########...#.#..#..#....#.###.###....#..........###.#.#.."
@@ -127,6 +125,7 @@ fun main(vararg args: String) {
     println("Initial state ${stateToStr(state)}")
 
     var found = false
+    val scoreTrend = mutableListOf<Int>()
     (1..1000).forEach { gen ->
         var newState = state.mapIndexed { index, i ->
             if (index < 2 || index > state.size - 3)
@@ -139,12 +138,21 @@ fun main(vararg args: String) {
         }
         else {
             newState = stateTrim(newState, offSet).first
-            //println("State gen $gen   ${stateToStr(state)}\"")
         }
         state = newState
-        println("Gen $gen Score ${scoreResult(state, 6)} size ${state.size} -- ${stateToStr(state)}")
+        val score = scoreResult(state, 6)
+        scoreTrend.add(score)
+ //       println("Gen $gen Score $score size ${state.size} -- ${stateToStr(state)}")
     }
     println("Final state ${stateToStr(state)}")
 
-    println("Score ${scoreResult(state, 6)}")
+    println(analyseScoreTrend(scoreTrend))
+}
+
+fun analyseScoreTrend(scores: MutableList<Int>): Pair<Boolean, Long> {
+    val diffs = (1..100).map {scores[scores.size - it] - scores[scores.size - (it + 1)]}
+    val constant = diffs.groupBy {it}.size == 1
+    val trend = diffs[0]
+    val result = ((50000000000L - scores.size) * trend) + scores.last()
+    return Pair(constant, result)
 }
