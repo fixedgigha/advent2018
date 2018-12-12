@@ -100,7 +100,7 @@ fun stateToStr(input: List<Int>) = String(input.map{ if (it == 1) '#' else '.'}.
 fun scoreResult(input: List<Int>, offset: Int) =
         input.mapIndexed { index, i -> if (i == 0) 0 else index - offset }.sum()
 
-fun stateTrim(state: List<Int>, pad: Int): Pair<List<Int>, Int> {
+fun stateGrow(state: List<Int>, pad: Int): List<Int> {
     val padNeeded = state.size  - state.lastIndexOf(1)
     val newState =
     if (padNeeded < pad) {
@@ -113,7 +113,7 @@ fun stateTrim(state: List<Int>, pad: Int): Pair<List<Int>, Int> {
         state
     }
 
-    return Pair(newState, pad)
+    return newState
 }
 
 fun main(vararg args: String) {
@@ -124,29 +124,23 @@ fun main(vararg args: String) {
     var state = makeInitialState(initialState, offSet)
     println("Initial state ${stateToStr(state)}")
 
-    var found = false
-    val scoreTrend = mutableListOf<Int>()
+    val scores = mutableListOf<Int>()
     (1..1000).forEach { gen ->
-        var newState = state.mapIndexed { index, i ->
-            if (index < 2 || index > state.size - 3)
-                0
-            else
-                match(index, state, r)
-        }
-        if (newState == state || state.indexOf(1) == -1) {
-            found = true
-        }
-        else {
-            newState = stateTrim(newState, offSet).first
-        }
-        state = newState
+        state = stateGrow(
+            state.mapIndexed { index, i ->
+                if (index < 2 || index > state.size - 3)
+                    0
+                else
+                    match(index, state, r)
+            },
+            offSet
+        )
         val score = scoreResult(state, 6)
-        scoreTrend.add(score)
- //       println("Gen $gen Score $score size ${state.size} -- ${stateToStr(state)}")
+        scores.add(score)
     }
     println("Final state ${stateToStr(state)}")
 
-    println(analyseScoreTrend(scoreTrend))
+    println(analyseScoreTrend(scores))
 }
 
 fun analyseScoreTrend(scores: MutableList<Int>): Pair<Boolean, Long> {
