@@ -12,7 +12,7 @@ val grid: MutableList<MutableList<Char>> = {
     }.toMutableList()
 }()
 
-data class Car(var x: Int, var y: Int, var dir: Char, var nextInter: Char = 'l' ) : Comparable<Car> {
+data class Car(var x: Int, var y: Int, var dir: Char, var nextInter: Char = 'l', var alive: Boolean = true ) : Comparable<Car> {
     override fun compareTo(other: Car): Int {
         return if (y < other.y || (y == other.y && x < other.x)) -1
         else if (y == other.y && x == other.x) 0
