@@ -28,16 +28,11 @@ fun main(vararg args: String) {
     while (nodeCount < target + 10) {
         val newScore = elf1.node.value + elf2.node.value
         if (newScore < 10) {
-            end.next = Node(newScore)
-            end = end.next?: NODE_OF_DOOM
-            nodeCount += 1
+            append(newScore)
         }
         else {
-            val newScore1 = newScore / 10
-            val newScore2 = newScore % 10
-            end.next = Node(newScore1, Node(newScore2))
-            end = end.next?.next?: NODE_OF_DOOM
-            nodeCount += 2
+            append(newScore / 10)
+            append(newScore % 10)
         }
         move(elf1)
         move(elf2)
