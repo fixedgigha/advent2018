@@ -1,4 +1,4 @@
-package advent2018
+package advent2018.day14
 
 
 data class Node(val value: Int, var next: Node? = null )
@@ -14,7 +14,7 @@ data class Elf(var node: Node)
 var elf1 = Elf(start)
 var elf2 = Elf(end)
 
-fun move(elf:  Elf) {
+fun move(elf: Elf) {
     var nextNode = elf.node
     (0..elf.node.value).forEach {_ ->
         nextNode = nextNode.next ?: start
