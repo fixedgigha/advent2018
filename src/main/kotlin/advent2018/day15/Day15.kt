@@ -226,6 +226,8 @@ fun main(vararg args: String) {
         game.drawBoard()
         round++
     }
+    println(round)
+    println(game.liveDudes().map { it.health })
     val result = game.liveDudes().map { it.health }.sum() * round
     println("Final result is $result winners are ${game.liveDudes().first().type} dead elves ${game.deadElves().size}")
 }
