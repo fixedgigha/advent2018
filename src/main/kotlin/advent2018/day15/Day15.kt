@@ -86,29 +86,46 @@ class Game(fileName: String) {
             openSpacesAround(it.x, it.y)
         }
 
+
     private fun routesToTarget(
         x: Int,
         y: Int,
         target: Pair<Int, Int>,
-        shortestSoFar: Int,
-        soFar: List<Pair<Int, Int>> = emptyList()
+        shortestSoFar: Int
     ): List<List<Pair<Int, Int>>> {
-        val newFar = mutableListOf<Pair<Int, Int>>()
-        newFar.addAll(soFar)
-        newFar.add(Pair(x, y))
-        if (x == target.first && y == target.second) {
-            return listOf(newFar)
+
+        var candidates = mutableListOf<List<Pair<Int,Int>>>()
+        candidates.add(mutableListOf(Pair(x,y)))
+
+        val winners = mutableListOf<List<Pair<Int,Int>>>()
+
+        while (winners.isEmpty() && candidates.isNotEmpty() && candidates.first().size < shortestSoFar) {
+            val nextCandidates = mutableListOf<List<Pair<Int,Int>>>()
+
+            candidates.sortedBy { absolute(it.last(), target) }.forEach {candidate ->
+                val end = candidate.last()
+                openSpacesAround(end.first, end.second)
+                    .filter { !candidate.contains(it) }
+                    .sortedBy { absolute(it, target)}
+                    .forEach {newPoint ->
+                        val newCandidate = mutableListOf<Pair<Int,Int>>()
+                        newCandidate.addAll(candidate)
+                        newCandidate.add(newPoint)
+                        if (newPoint == target) {
+                            winners.add(newCandidate)
+                        }
+                        else if (winners.isEmpty()) {
+                            nextCandidates.add(newCandidate)
+                        }
+                    }
+            }
+            candidates = nextCandidates
         }
-        if (newFar.size == shortestSoFar) {
-            return emptyList()
-        }
-        var newShortest = shortestSoFar
-        return openSpacesAround(x, y).filter { !soFar.contains(it) }.flatMap {(x, y) ->
-            val routes = routesToTarget(x, y, target, newShortest, newFar)
-            if (routes.isNotEmpty()) newShortest = routes.sortedBy { it.size }.first().size
-            routes.filter { it.size == newShortest}
-        }
+        return winners
     }
+
+    private fun absolute(x: Int, y: Int, point: Pair<Int, Int>) = (x - point.first).absoluteValue + (y - point.second).absoluteValue
+    private fun absolute(point1: Pair<Int,Int>, point2: Pair<Int, Int>) = (point1.first - point2.first).absoluteValue + (point1.second - point2.second).absoluteValue
 
     private fun takeARound(dude: Dude, dudes: List<Dude>): Boolean {
         if (!dude.alive()) return false
@@ -117,15 +134,18 @@ class Game(fileName: String) {
         var attackable = attackableTargets(dude, targets)
         if (attackable.isEmpty()) {
             // workout next move
-            val inRange = inRange(targets).sortedBy {
-                (dude.x - it.first).absoluteValue + (dude.y - it.second).absoluteValue
-            }
+            val inRange = inRange(targets).sortedBy {absolute(dude.x, dude.y, it) }
             var shortestSoFar = Int.MAX_VALUE
             val routesToTarget = inRange
                 .flatMap {target ->
-                    val routes = routesToTarget(dude.x, dude.y, target, shortestSoFar)
-                    if (routes.isNotEmpty()) shortestSoFar = routes.sortedBy { it.size }.first().size
-                    routes.filter { it.size == shortestSoFar}
+                    if (absolute(dude.x, dude.y, target) > shortestSoFar) {
+                        emptyList()
+                    }
+                    else {
+                        val routes = routesToTarget(dude.x, dude.y, target, shortestSoFar)
+                        if (routes.isNotEmpty()) shortestSoFar = routes.sortedBy { it.size }.first().size
+                        routes.filter { it.size == shortestSoFar }
+                    }
                 }
                 .sortedBy { it.size }
             if (routesToTarget.isNotEmpty()) {
@@ -171,9 +191,9 @@ class Game(fileName: String) {
 }
 
 fun main(vararg args: String) {
-    val game = Game("testInput6.txt")
+    val game = Game("input.txt")
     var round = 0
-    while (true) {
+    while (round < 50) {
         if (game.round()) break
         println("After round $round")
         game.drawBoard()
