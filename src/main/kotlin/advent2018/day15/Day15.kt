@@ -30,17 +30,21 @@ fun loadBoard(fileName: String): Pair<List<CharArray>, List<Dude>> {
     return Pair(map, dudes)
 }
 
-fun takeARound(dude: Dude, map: List<CharArray>, dudes: List<Dude>) {
+fun takeARound(dude: Dude, map: List<CharArray>, dudes: List<Dude>): Boolean {
 
+    return false
 }
 
 fun main(vararg args: String) {
     val (map, dudes) = loadBoard("testInput.txt")
-    var round = 1
-    while (round == 1) {
+    var round = 0
+    while (round < 5) {
         val liveDudes = dudes.filter{ it.health > 0 }.sorted()
-        liveDudes.forEach {dude ->
-            takeARound(dude, map, liveDudes)
-        }
+        if (liveDudes.fold(false) {outcome, dude ->
+            outcome || takeARound(dude, map, liveDudes)
+        }) break
+        round++
     }
+    val result = dudes.filter { it.health > 0 }.map { it.health }.sum() * round
+    println("Final result is $result")
 }
