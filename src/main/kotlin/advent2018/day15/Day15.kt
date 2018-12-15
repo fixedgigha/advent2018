@@ -13,6 +13,7 @@ data class Dude(val type: Char, var x: Int, var y: Int, var health: Int = 200): 
         else 1
     }
 
+    val killPower = if (type == 'E') 34 else 3
 }
 
 class ComparablePoint(val point: Pair<Int, Int>) : Comparable<ComparablePoint> {
@@ -92,36 +93,55 @@ class Game(fileName: String) {
         y: Int,
         target: Pair<Int, Int>,
         shortestSoFar: Int
-    ): List<List<Pair<Int, Int>>> {
+    ): Pair<Int, Pair<Int, Int>?> {
+        class Candidate(val startFrom: Pair<Int, Int>, val current: Pair<Int,Int>, val considered: MutableSet<Pair<Int, Int>>)
+        var candidates = openSpacesAround(x, y).sortedBy { absolute(it, target) }.map { space ->
+            Candidate(space, space, mutableSetOf(Pair(x, y), space))
+        }
 
-        var candidates = mutableListOf<List<Pair<Int,Int>>>()
-        candidates.add(mutableListOf(Pair(x,y)))
+        val winners = mutableListOf<Candidate>()
+        winners.addAll(candidates.filter{ it.current == target})
+        var steps = 1
+        while (winners.isEmpty() && candidates.isNotEmpty() && steps < shortestSoFar) {
+            val nextCandidates = mutableListOf<Candidate>()
 
-        val winners = mutableListOf<List<Pair<Int,Int>>>()
-
-        while (winners.isEmpty() && candidates.isNotEmpty() && candidates.first().size < shortestSoFar) {
-            val nextCandidates = mutableListOf<List<Pair<Int,Int>>>()
-
-            candidates.sortedBy { absolute(it.last(), target) }.forEach {candidate ->
-                val end = candidate.last()
-                openSpacesAround(end.first, end.second)
-                    .filter { !candidate.contains(it) }
+            candidates.sortedBy { absolute(it.current, target) }.forEach {candidate ->
+                openSpacesAround(candidate.current.first, candidate.current.second)
+                    .filter { !candidate.considered.contains(it) }
                     .sortedBy { absolute(it, target)}
                     .forEach {newPoint ->
-                        val newCandidate = mutableListOf<Pair<Int,Int>>()
-                        newCandidate.addAll(candidate)
-                        newCandidate.add(newPoint)
+                        val consideredPoints = mutableSetOf<Pair<Int, Int>>()
+                        consideredPoints.addAll(candidate.considered)
+                        consideredPoints.add(newPoint)
+                        val newCandidate = Candidate(candidate.startFrom, newPoint, consideredPoints)
                         if (newPoint == target) {
                             winners.add(newCandidate)
                         }
                         else if (winners.isEmpty()) {
-                            nextCandidates.add(newCandidate)
+                            if (steps > 3) {
+                                val mergeCandidate = nextCandidates.find { it.startFrom == newCandidate.startFrom && it.current == newCandidate.current }
+                                if (mergeCandidate != null) {
+                                    mergeCandidate.considered.addAll(newCandidate.considered)
+                                }
+                                else {
+                                    nextCandidates.add(newCandidate)
+                                }
+                            }
+                            else {
+                                nextCandidates.add(newCandidate)
+                            }
                         }
                     }
             }
+            steps++
             candidates = nextCandidates
         }
-        return winners
+        return if (winners.isNotEmpty()) {
+            Pair(steps, winners.map { it.startFrom }.sortedBy { ComparablePoint(it) }.first())
+        }
+        else {
+            Pair(-1, null)
+        }
     }
 
     private fun absolute(x: Int, y: Int, point: Pair<Int, Int>) = (x - point.first).absoluteValue + (y - point.second).absoluteValue
@@ -130,7 +150,8 @@ class Game(fileName: String) {
     private fun takeARound(dude: Dude, dudes: List<Dude>): Boolean {
         if (!dude.alive()) return false
         val targets = dudes.filter { it.alive() && it.type != dude.type }
-        if (targets.isEmpty()) return true // game over
+        if (targets.isEmpty())
+            return true // game over
         var attackable = attackableTargets(dude, targets)
         if (attackable.isEmpty()) {
             // workout next move
@@ -143,18 +164,22 @@ class Game(fileName: String) {
                     }
                     else {
                         val routes = routesToTarget(dude.x, dude.y, target, shortestSoFar)
-                        if (routes.isNotEmpty()) shortestSoFar = routes.sortedBy { it.size }.first().size
-                        routes.filter { it.size == shortestSoFar }
+                        if (routes.second != null) {
+                            if (routes.first < shortestSoFar) shortestSoFar = routes.first
+                            listOf(routes)
+                        }
+                        else {
+                            emptyList()
+                        }
                     }
                 }
-                .sortedBy { it.size }
+                .sortedBy { it.first }
             if (routesToTarget.isNotEmpty()) {
-                val shortestRouteLen = routesToTarget.first().size
-                val nextMove =
-                    routesToTarget.takeWhile { it.size == shortestRouteLen }.sortedBy { ComparablePoint(it[1]) }.first()[1]
+                val fewestSteps = routesToTarget.first().first
+                val nextMove = routesToTarget.takeWhile { it.first == fewestSteps}.sortedBy{ ComparablePoint(it.second?:Pair(Int.MAX_VALUE, Int.MAX_VALUE)) }. first()
                 // move
-                dude.x = nextMove.first
-                dude.y = nextMove.second
+                dude.x = nextMove.second?.first?:dude.x
+                dude.y = nextMove.second?.second?:dude.y
                 attackable = attackableTargets(dude, targets)
             }
         }
@@ -165,7 +190,7 @@ class Game(fileName: String) {
                 .takeWhile { it.health == lowestHealth }
                 .sortedBy { ComparablePoint(Pair(it.x, it.y)) }
                 .first()
-            victim.health -= 3
+            victim.health -= dude.killPower
         }
         return false
     }
@@ -178,6 +203,8 @@ class Game(fileName: String) {
     }
 
     fun liveDudes() = dudes.filter{ it.health > 0 }.sorted()
+
+    fun deadElves() = dudes.filter{ it.health <= 0 && it.type == 'E' }
 
     fun drawBoard() {
         map.forEachIndexed {y, row ->
@@ -193,12 +220,12 @@ class Game(fileName: String) {
 fun main(vararg args: String) {
     val game = Game("input.txt")
     var round = 0
-    while (round < 50) {
+    while (true) {
         if (game.round()) break
         println("After round $round")
         game.drawBoard()
         round++
     }
     val result = game.liveDudes().map { it.health }.sum() * round
-    println("Final result is $result")
+    println("Final result is $result winners are ${game.liveDudes().first().type} dead elves ${game.deadElves().size}")
 }
