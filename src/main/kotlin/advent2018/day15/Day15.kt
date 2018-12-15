@@ -30,7 +30,7 @@ class Game(fileName: String) {
     private val map: List<CharArray>
     private val dudes: List<Dude>
     init {
-        val (map1, dudes1) = loadBoard("testInput.txt")
+        val (map1, dudes1) = loadBoard(fileName)
         map = map1
         dudes = dudes1
     }
@@ -90,6 +90,7 @@ class Game(fileName: String) {
         x: Int,
         y: Int,
         target: Pair<Int, Int>,
+        shortestSoFar: Int,
         soFar: List<Pair<Int, Int>> = emptyList()
     ): List<List<Pair<Int, Int>>> {
         val newFar = mutableListOf<Pair<Int, Int>>()
@@ -98,7 +99,15 @@ class Game(fileName: String) {
         if (x == target.first && y == target.second) {
             return listOf(newFar)
         }
-        return openSpacesAround(x, y).filter { !soFar.contains(it) }.flatMap { routesToTarget(it.first, it.second, target, newFar)}
+        if (newFar.size == shortestSoFar) {
+            return emptyList()
+        }
+        var newShortest = shortestSoFar
+        return openSpacesAround(x, y).filter { !soFar.contains(it) }.flatMap {(x, y) ->
+            val routes = routesToTarget(x, y, target, newShortest, newFar)
+            if (routes.isNotEmpty()) newShortest = routes.sortedBy { it.size }.first().size
+            routes.filter { it.size == newShortest}
+        }
     }
 
     private fun takeARound(dude: Dude, dudes: List<Dude>): Boolean {
@@ -108,9 +117,16 @@ class Game(fileName: String) {
         var attackable = attackableTargets(dude, targets)
         if (attackable.isEmpty()) {
             // workout next move
-            val inRange = inRange(targets)
+            val inRange = inRange(targets).sortedBy {
+                (dude.x - it.first).absoluteValue + (dude.y - it.second).absoluteValue
+            }
+            var shortestSoFar = Int.MAX_VALUE
             val routesToTarget = inRange
-                .flatMap { routesToTarget(dude.x, dude.y, it) }
+                .flatMap {target ->
+                    val routes = routesToTarget(dude.x, dude.y, target, shortestSoFar)
+                    if (routes.isNotEmpty()) shortestSoFar = routes.sortedBy { it.size }.first().size
+                    routes.filter { it.size == shortestSoFar}
+                }
                 .sortedBy { it.size }
             if (routesToTarget.isNotEmpty()) {
                 val shortestRouteLen = routesToTarget.first().size
@@ -155,9 +171,9 @@ class Game(fileName: String) {
 }
 
 fun main(vararg args: String) {
-    val game = Game("testInput.txt")
+    val game = Game("testInput6.txt")
     var round = 0
-    while (round < 50) {
+    while (true) {
         if (game.round()) break
         println("After round $round")
         game.drawBoard()
