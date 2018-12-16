@@ -13,7 +13,7 @@ data class Dude(val type: Char, var x: Int, var y: Int, var health: Int = 200): 
         else 1
     }
 
-    val killPower = if (type == 'E') 34 else 3
+    val killPower = if (type == 'E') 29 else 3
 }
 
 class ComparablePoint(val point: Pair<Int, Int>) : Comparable<ComparablePoint> {
@@ -93,7 +93,10 @@ class Game(fileName: String) {
         y: Int,
         target: Pair<Int, Int>,
         shortestSoFar: Int
-    ): Pair<Int, Pair<Int, Int>?> {
+    ): Triple<Int, Pair<Int, Int>?, Pair<Int, Int>> {
+        if (x == 9 && y ==13 ) {
+            x + y
+        }
         class Candidate(val startFrom: Pair<Int, Int>, val current: Pair<Int,Int>, val considered: MutableSet<Pair<Int, Int>>)
         var candidates = openSpacesAround(x, y).sortedBy { absolute(it, target) }.map { space ->
             Candidate(space, space, mutableSetOf(Pair(x, y), space))
@@ -137,10 +140,10 @@ class Game(fileName: String) {
             candidates = nextCandidates
         }
         return if (winners.isNotEmpty()) {
-            Pair(steps, winners.map { it.startFrom }.sortedBy { ComparablePoint(it) }.first())
+            Triple(steps, winners.map { it.startFrom }.sortedBy { ComparablePoint(it) }.first(), target)
         }
         else {
-            Pair(-1, null)
+            Triple(-1, null, target)
         }
     }
 
@@ -176,7 +179,7 @@ class Game(fileName: String) {
                 .sortedBy { it.first }
             if (routesToTarget.isNotEmpty()) {
                 val fewestSteps = routesToTarget.first().first
-                val nextMove = routesToTarget.takeWhile { it.first == fewestSteps}.sortedBy{ ComparablePoint(it.second?:Pair(Int.MAX_VALUE, Int.MAX_VALUE)) }. first()
+                val nextMove = routesToTarget.takeWhile { it.first == fewestSteps}.sortedBy{ ComparablePoint(it.third) }. first()
                 // move
                 dude.x = nextMove.second?.first?:dude.x
                 dude.y = nextMove.second?.second?:dude.y
@@ -207,13 +210,13 @@ class Game(fileName: String) {
     fun deadElves() = dudes.filter{ it.health <= 0 && it.type == 'E' }
 
     fun drawBoard() {
-        map.forEachIndexed {y, row ->
+ /*       map.forEachIndexed {y, row ->
             row.forEachIndexed {x, cell ->
                 print(coordDude(x, y)?.type?:cell)
             }
             println()
-        }
-        println(liveDudes())
+        } */
+        println(liveDudes().sortedBy { ComparablePoint( Pair(it.x, it.y))})
     }
 }
 
