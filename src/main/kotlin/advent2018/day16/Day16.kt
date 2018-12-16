@@ -138,11 +138,23 @@ fun noop(input: List<Int>, instruction: List<Int>): List<Int> {
     throw RuntimeException()
 }
 
-val realOperationsMap = mutableMapOf<Int, (List<Int>, List<Int>) -> List<Int>>(
+fun deduceRealOps() {
+    while (realOperationsMap.size < 16) {
+        operationsMap.forEach { (op, funcs) ->
+            if (funcs.size == 1) {
+                realOperationsMap[op] = funcs.iterator().next()
+            } else {
+                funcs.removeIf { realOperationsMap.values.contains(it) }
+            }
+        }
+    }
+}
+
+var realOperationsMap = mutableMapOf<Int, (List<Int>, List<Int>) -> List<Int>>() /*(
     9 to ::gtrr, 3 to ::eqir, 11 to ::gtri, 1 to ::eqrr, 12 to ::eqri, 8 to ::gtir, 2 to ::setr, 0 to ::banr,
     6 to ::bani, 15 to ::seti, 14 to ::mulr, 5 to ::muli, 10 to ::addi, 13 to ::addr, 7 to ::borr, 4 to ::bori
 
-)
+)*/
 
 fun main(vararg args: String) {
     var lines = File("src/main/resources/day16/example.txt").readLines()
@@ -154,7 +166,7 @@ fun main(vararg args: String) {
         processSample(sample)
         lines = lines.drop(4)
     }
-
+    deduceRealOps()
     println("Result $realOperationsMap")
 
     var registers = listOf(0, 0, 0, 0)
