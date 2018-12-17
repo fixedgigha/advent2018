@@ -119,6 +119,9 @@ class Game(fileName: String) {
         rising: Boolean = false,
         delta: Int = -1
     ): Pair<List<Pair<Int, Int>>, Pair<Int, Int>?> {
+        if (point.second ==  130) {
+            val z = 1
+        }
         val addedPoints = mutableListOf<Pair<Int, Int>>()
         var nextPoint = Pair(point.first + delta, point.second)
         var nextPointBelow = Pair(nextPoint.first, nextPoint.second + 1)
@@ -127,6 +130,12 @@ class Game(fileName: String) {
             addedPoints.add(nextPoint)
             nextPoint = Pair(nextPoint.first + delta, point.second)
             nextPointBelow = Pair(nextPoint.first, nextPoint.second + 1)
+            if (nextPoint.second ==  130 && nextPoint.first > 530) {
+                val z = 1
+            }
+        }
+        if (nextPoint.second == 130) {
+            println("$nextPointBelow  ${inMap(nextPointBelow)}  $rising ${waterPoints.contains(nextPointBelow)} $nextPoint ${inMap(nextPoint)}")
         }
         return Pair(addedPoints, when {
             inMap(nextPoint) -> null
@@ -160,12 +169,12 @@ fun main(vararg args: String) {
         round++
         println("Round $round water ${game.waterPoints.size} danglers ${danglers.size}") // -> ${game.waterPoints}
 
-        /*if (round > 85) {
-            game.draw((46..61))
-        }*/
+        if (round > 236) {
+            game.draw((128..145))
+        }
 
     }
-    game.draw()
+    //game.draw()
 
 
     println("FINAL RESULT ${game.waterPoints.size}")
