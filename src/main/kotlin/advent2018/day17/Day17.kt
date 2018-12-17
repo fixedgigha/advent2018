@@ -12,7 +12,7 @@ fun makeRange(input: String): IntRange =
 
 fun loadData(fileName: String) =
     File("src/main/resources/day17/$fileName").readLines().map{line ->
-        Regex("(x|y)=(\\d+|\\d+\\.\\.\\d+)").findAll(line)
+        Regex("(x|y)=(\\d+(\\.\\.\\d+)?)").findAll(line)
             .map { match -> match.groupValues[1] to makeRange(match.groupValues[2]) }
             .groupBy { it.first }
             .let {map ->
