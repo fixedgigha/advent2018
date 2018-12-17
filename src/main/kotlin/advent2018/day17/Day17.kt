@@ -21,11 +21,35 @@ fun loadData(fileName: String) =
                     map.getOrDefault("y", emptyList()).first().second
                 )
             }
-    }
+    }.toSet()
 
+fun inMap(coord: Pair<Int, Int>, map: Set<Clay>) =
+        map.find { clay -> clay.x.contains(coord.first) && clay.y.contains(coord.second)} != null
+
+fun round(map: Set<Clay>, waterPoints: MutableSet<Pair<Int, Int>>, maxY: Int): Int {
+    val newPoints = mutableSetOf<Pair<Int, Int>>()
+    waterPoints.forEach {point ->
+        val below = Pair(point.first, point.second + 1)
+        if (below.second < maxY && !waterPoints.contains(below)) {
+            if (! inMap(below, map)) {
+                newPoints.add(below);
+            }
+        }
+    }
+    waterPoints.addAll(newPoints)
+    return newPoints.size
+}
 
 fun main(vararg args: String) {
     val map = loadData("testInput.txt")
+    val maxY = map.fold(0) { highest, clay -> Math.max(highest, clay.y.last)}
     println(map)
+    println("Max Y $maxY")
 
+    val waterPoints = mutableSetOf(Pair(500, 0))
+    var round = 0
+    while (round(map, waterPoints, maxY) > 0) {
+        round++
+        println("Round $round water ${waterPoints.size} -> $waterPoints")
+    }
 }
