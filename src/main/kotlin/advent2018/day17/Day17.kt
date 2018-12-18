@@ -11,8 +11,9 @@ class Game(fileName: String) {
     private val minX = map.fold(Int.MAX_VALUE) { lowest, clay -> Math.min(lowest, clay.x.last)}
     private val maxX = map.fold(0) { highest, clay -> Math.max(highest, clay.x.last)}
     val waterPoints = mutableSetOf<Pair<Int, Int>>()
-    val alltimeDanglers = mutableSetOf<Pair<Int, Int>>()
-    val fillingDanglers = mutableSetOf<Pair<Int, Int>>()
+    private val alltimeDanglers = mutableSetOf<Pair<Int, Int>>()
+    private val fillingDanglers = mutableSetOf<Pair<Int, Int>>()
+    val filledPoints = mutableSetOf<Pair<Int, Int>>()
 
     private fun makeRange(input: String): IntRange =
         Regex("(\\d+)\\.\\.(\\d+)").matchEntire(input)?.let {
@@ -61,11 +62,12 @@ class Game(fileName: String) {
                         waterPoints.add(below)
                     }
                 } else {
-                    var fillCandidates = mutableListOf(point)
+                    var fillCandidates = mutableSetOf(point)
                     var rising = false
 
                     while (fillCandidates.isNotEmpty()) {
-                        val fillCandidate = fillCandidates.removeAt(0)
+                        val fillCandidate = fillCandidates.take(1).first()
+                        fillCandidates.remove(fillCandidate)
                         fillingDanglers.add(fillCandidate)
                         var notFinished = true
                         if (fillCandidate.second == 55) {
@@ -88,6 +90,7 @@ class Game(fileName: String) {
                             allPointsFilled.addAll(it.first)
                         }
                         if (notFinished) {
+                            filledPoints.addAll(allPointsFilled)
                             val above = findAbove(allPointsFilled)
                             if (above.isNotEmpty()) {
                                 fillCandidates.addAll(above.toSet())
@@ -126,7 +129,8 @@ class Game(fileName: String) {
                 print(
                     when {
                         inMap(coord) -> '#'
-                        waterPoints.contains(coord) -> '~'
+                        filledPoints.contains(coord) -> '~'
+                        waterPoints.contains(coord) -> '|'
                         else -> '.'
                     }
                 )
@@ -145,12 +149,7 @@ class Game(fileName: String) {
         return true
     }
 
-    private fun fallingDangler(candidate: Pair<Int, Int>): Boolean {
-        val result = alltimeDanglers.contains(candidate) && !fillingDanglers.contains(candidate)
-      //  if (result)
-      //      debug(message = "Passed falling dangler $candidate", yRange = (candidate.second - 5 .. candidate.second + 10))
-        return result
-    }
+    private fun fallingDangler(candidate: Pair<Int, Int>) = alltimeDanglers.contains(candidate) && !fillingDanglers.contains(candidate)
 
     private fun fillLeft(
         point: Pair<Int, Int>,
@@ -191,25 +190,23 @@ fun main(vararg args: String) {
 
     val game = Game("input.txt")
 
-    println(game.map)
     println("Max Y ${game.maxY}")
 
+    val minY = game.map.fold(game.maxY) { max, clay -> Math.min(max, clay.y.first)}
     var round = 0
-    var danglers = listOf(Pair(500, 0))
+    var danglers = listOf(Pair(500, minY - 1))
     var yMax = 0
     while (danglers.isNotEmpty()) {
 
         danglers = game.round(danglers)
         round++
         yMax = game.waterPoints.fold(yMax) { max, point -> Math.max(max, point.second)}
-        println("Round $round water ${game.waterPoints.size} danglers ${danglers.size} y $yMax") // -> ${game.waterPoints}
-        if (round == 2255) {
-            break
-        }
+        //println("Round $round water ${game.waterPoints.size} danglers ${danglers.size} y $yMax") // -> ${game.waterPoints}
+
 
     }
     game.draw()
-
-
+    println("Min Y $minY")
     println("FINAL RESULT ${game.waterPoints.size}")
+    println("Filled ${game.filledPoints.size}")
 }
