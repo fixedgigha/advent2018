@@ -1,6 +1,5 @@
 package advent2018.day17
 
-import advent2018.day10.pointsToGrid
 import java.io.File
 
 data class Clay(val x: IntRange, val y: IntRange)
@@ -36,6 +35,19 @@ class Game(fileName: String) {
     private fun inMap(coord: Pair<Int, Int>) =
         map.find { clay -> clay.x.contains(coord.first) && clay.y.contains(coord.second) } != null
 
+    private fun findAbove(points: List<Pair<Int, Int>>): List<Pair<Int, Int>> {
+        if (points.isEmpty()) return emptyList()
+        val sorted = mutableListOf<Pair<Int, Int>>()
+        sorted.addAll(points.sortedBy { it.first })
+        while (waterPoints.contains(Pair(sorted.first().first - 1, sorted.first().second ))) {
+            sorted.add(0, Pair(sorted.first().first - 1, sorted.first().second ))
+        }
+        while (waterPoints.contains(Pair(sorted.last().first + 1, sorted.last().second ))) {
+            sorted.add(Pair(sorted.last().first + 1, sorted.last().second ))
+        }
+        return sorted.map { Pair(it.first, it.second - 1) }.filter { alltimeDanglers.contains(it) }
+    }
+
     fun round(danglers: List<Pair<Int, Int>>): List<Pair<Int, Int>> {
         var newDanglers = mutableSetOf<Pair<Int, Int>>()
         danglers.forEach { point ->
@@ -51,10 +63,12 @@ class Game(fileName: String) {
                         waterPoints.add(below)
                     }
                 } else {
-                    var fillCandidate = point
+                    var fillCandidates = mutableListOf(point)
                     var rising = false
-                    var notFinished = true
-                    while (notFinished) {
+
+                    while (fillCandidates.isNotEmpty()) {
+                        val fillCandidate = fillCandidates.removeAt(0)
+                        var notFinished = true
                         if (fillCandidate.second == 55) {
                             val z = 1
                         }
@@ -75,19 +89,11 @@ class Game(fileName: String) {
                             allPointsFilled.addAll(it.first)
                         }
                         if (notFinished) {
-                            val above = allPointsFilled.find {
-                                val above = Pair(it.first, it.second - 1)
-                                alltimeDanglers.contains(it)
-                            }?.copy(second = fillCandidate.second - 1)
-                            if (above != null) {
-                                fillCandidate = above
+                            val above = findAbove(allPointsFilled)
+                            if (above.isNotEmpty()) {
+                                fillCandidates.addAll(above)
                                 rising = true
-                            } else {
-                                notFinished = false
                             }
-                        }
-                        else {
-                            notFinished = false
                         }
 
                     }
@@ -131,18 +137,27 @@ class Game(fileName: String) {
         }
     }
 
+    private fun debug(message: String = "DEBUG:", predicate: () -> Boolean = {true}): Boolean {
+
+        if (predicate()) {
+            println(message)
+            draw((128..142))
+        }
+        return true
+    }
+
     private fun fillLeft(
         point: Pair<Int, Int>,
         rising: Boolean = false,
         delta: Int = -1
     ): Pair<List<Pair<Int, Int>>, Pair<Int, Int>?> {
-        if (point.second ==  130) {
-            val z = 1
-        }
+
         val addedPoints = mutableListOf<Pair<Int, Int>>()
         var nextPoint = Pair(point.first + delta, point.second)
         var nextPointBelow = Pair(nextPoint.first, nextPoint.second + 1)
-        while ((inMap(nextPointBelow) || (rising && waterPoints.contains(nextPointBelow))) && !inMap(nextPoint)) {
+        while (debug("$nextPointBelow  ${inMap(nextPointBelow)}  $rising ${waterPoints.contains(nextPointBelow)} $nextPoint ${inMap(nextPoint)} $delta $point")
+                    {nextPoint.second == 130 && (531..533).contains(nextPoint.first)} &&
+                (inMap(nextPointBelow) || (rising && waterPoints.contains(nextPointBelow))) && !inMap(nextPoint)) {
             waterPoints.add(nextPoint)
             addedPoints.add(nextPoint)
             nextPoint = Pair(nextPoint.first + delta, point.second)
@@ -150,9 +165,6 @@ class Game(fileName: String) {
             if (nextPoint.second ==  130 && nextPoint.first > 530) {
                 val z = 1
             }
-        }
-        if (nextPoint.second == 130) {
-            println("$nextPointBelow  ${inMap(nextPointBelow)}  $rising ${waterPoints.contains(nextPointBelow)} $nextPoint ${inMap(nextPoint)}")
         }
         return Pair(addedPoints, when {
             inMap(nextPoint) -> null
@@ -186,8 +198,9 @@ fun main(vararg args: String) {
         round++
         println("Round $round water ${game.waterPoints.size} danglers ${danglers.size}") // -> ${game.waterPoints}
 
-        if (round > 236) {
-            game.draw((128..142))
+        if (round == 86) {
+           game.draw((0 .. game.waterPoints.sortedByDescending { it.second }.first().second + 3))
+           break
         }
 
     }
