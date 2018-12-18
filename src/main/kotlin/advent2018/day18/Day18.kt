@@ -83,14 +83,16 @@ fun main(vararg args: String) {
     loadData("input.txt")
     val deltas = mutableListOf(0L)
     //printData()
-    val analysis = (1..10000).map {_->
+    val scores = (1..10000).map {_->
             transform()
             //printData()
             val score = score()
             deltas.add(score - deltas.last())
             score
-        }.mapIndexed { index, i ->  Pair(i, index)}.groupBy { it.first }.entries.sortedByDescending {(k, v) -> v.size  }
-
-
-    println(analysis.map { Triple(it.key, it.value.size, it.value.last())} .sortedBy { it -> it.third.second }.take (20))
+        }.takeLast(28 * 3)
+    // sorry - derived 28 as the repeating sequence via a visual scan of the generated scores
+    println(scores.subList(0, 27) == scores.subList(28, 55) )
+    println(scores.subList(56, 83) == scores.subList(28, 55) )
+    println(scores.subList(56, 83)[(1000000000 - 10000) % 28 - 1])
+    println(scores)
 }
