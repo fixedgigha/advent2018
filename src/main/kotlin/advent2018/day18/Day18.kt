@@ -5,6 +5,8 @@ import java.io.File
 
 var data = mutableListOf<CharArray>()
 
+val scores = mutableListOf<Long>()
+
 fun loadData(fileName: String) {
     File("src/main/resources/day18/$fileName").readLines().forEach { line ->
         val ca = CharArray(line.length + 2)
@@ -61,8 +63,12 @@ fun score(): Long {
     val lumberCount = data.fold(0) { total, chars ->
         total + chars.filter{ it == '#' }.size
     }
-    return treeCount.toLong() * lumberCount
+    val score = treeCount.toLong() * lumberCount
+    scores.add(score)
+    return score
 }
+
+
 
 fun printData() {
     data.forEach { chars ->
@@ -86,5 +92,5 @@ fun main(vararg args: String) {
         }.mapIndexed { index, i ->  Pair(i, index)}.groupBy { it.first }.entries.sortedByDescending {(k, v) -> v.size  }
 
 
-    println(analysis.take(20).map { Pair(it.key, it.value.size)})
+    println(analysis.map { Triple(it.key, it.value.size, it.value.last())} .sortedBy { it -> it.third.second }.take (20))
 }
