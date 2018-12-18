@@ -196,11 +196,13 @@ fun main(vararg args: String) {
 
     var round = 0
     var danglers = listOf(Pair(500, 0))
+    var yMax = 0
     while (danglers.isNotEmpty()) {
 
         danglers = game.round(danglers)
         round++
-        println("Round $round water ${game.waterPoints.size} danglers ${danglers.size} ") // -> ${game.waterPoints}
+        yMax = game.waterPoints.fold(yMax) { max, point -> Math.max(max, point.second)}
+        println("Round $round water ${game.waterPoints.size} danglers ${danglers.size} y $yMax") // -> ${game.waterPoints}
 
     }
     game.draw()
