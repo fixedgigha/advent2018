@@ -98,8 +98,25 @@ class Game(fileName: String) {
     }
 
     fun draw(yRange: IntRange = (0 .. maxY)) {
+        val xRange = (minX - 2) .. (maxX + 2)
+        print("    ")
+        xRange.forEach { x ->
+            print(if (x % 10 == 0) "${x / 100}"  else " ")
+        }
+        println()
+        print("    ")
+        xRange.forEach { x ->
+            print(if (x % 10 == 0) "${(x / 10) % 10 }"  else " ")
+        }
+        println()
+        print("    ")
+        xRange.forEach { x ->
+            print(x % 10)
+        }
+        println()
         yRange.forEach {y ->
-            ((minX - 2) .. (maxX + 2)).forEach {x ->
+            print("%04d".format(y))
+            xRange.forEach {x ->
                 val coord = Pair(x, y)
                 print(
                     when {
@@ -170,7 +187,7 @@ fun main(vararg args: String) {
         println("Round $round water ${game.waterPoints.size} danglers ${danglers.size}") // -> ${game.waterPoints}
 
         if (round > 236) {
-            game.draw((128..145))
+            game.draw((128..142))
         }
 
     }
