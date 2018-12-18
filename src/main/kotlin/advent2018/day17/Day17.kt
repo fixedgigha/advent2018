@@ -201,11 +201,7 @@ fun main(vararg args: String) {
         danglers = game.round(danglers)
         round++
         println("Round $round water ${game.waterPoints.size} danglers ${danglers.size} ") // -> ${game.waterPoints}
-        if (round == 549) {
-            game.draw((0..game.waterPoints.fold(0) {max, point -> Math.max(max, point.second)} + 3))
-            println("Danglers $danglers")
-            break
-        }
+
     }
     game.draw()
 
