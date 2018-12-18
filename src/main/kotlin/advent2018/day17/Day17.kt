@@ -34,7 +34,7 @@ class Game(fileName: String) {
                 }
         }.toSet()
 
-    private fun inMap(coord: Pair<Int, Int>) =
+    private fun inClay(coord: Pair<Int, Int>) =
         map.find { clay -> clay.x.contains(coord.first) && clay.y.contains(coord.second) } != null
 
     private fun findAbove(points: List<Pair<Int, Int>>): List<Pair<Int, Int>> {
@@ -55,7 +55,7 @@ class Game(fileName: String) {
         danglers.forEach { point ->
             val below = Pair(point.first, point.second + 1)
             if (below.second <= maxY) {
-                if (!inMap(below)) {
+                if (!inClay(below)) {
                     if (!alltimeDanglers.contains(below)) {
                         alltimeDanglers.add(below)
                         newDanglers.add(below)
@@ -128,7 +128,7 @@ class Game(fileName: String) {
                 val coord = Pair(x, y)
                 print(
                     when {
-                        inMap(coord) -> '#'
+                        inClay(coord) -> '#'
                         filledPoints.contains(coord) -> '~'
                         waterPoints.contains(coord) -> '|'
                         else -> '.'
@@ -160,9 +160,7 @@ class Game(fileName: String) {
         val addedPoints = mutableListOf<Pair<Int, Int>>()
         var nextPoint = Pair(point.first + delta, point.second)
         var nextPointBelow = Pair(nextPoint.first, nextPoint.second + 1)
-        while (/*debug("$nextPointBelow  ${inMap(nextPointBelow)}  $rising ${waterPoints.contains(nextPointBelow)} $nextPoint ${inMap(nextPoint)} $delta $point")
-                    {nextPoint.second == 51 && (500..502).contains(nextPoint.first)} && */
-                (inMap(nextPointBelow) || (rising && waterPoints.contains(nextPointBelow))) && (!fallingDangler(nextPoint)) && (!inMap(nextPoint))) {
+        while ((inClay(nextPointBelow) || (rising && waterPoints.contains(nextPointBelow))) && (!fallingDangler(nextPoint)) && (!inClay(nextPoint))) {
             waterPoints.add(nextPoint)
             addedPoints.add(nextPoint)
             nextPoint = Pair(nextPoint.first + delta, point.second)
@@ -172,7 +170,7 @@ class Game(fileName: String) {
             }
         }
         return Pair(addedPoints, when {
-            inMap(nextPoint)  -> null
+            inClay(nextPoint)  -> null
             else -> nextPoint // we haven't stopped because we hit a wall, we stopped because we're about to overflow
         })
     }
