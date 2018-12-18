@@ -203,6 +203,9 @@ fun main(vararg args: String) {
         round++
         yMax = game.waterPoints.fold(yMax) { max, point -> Math.max(max, point.second)}
         println("Round $round water ${game.waterPoints.size} danglers ${danglers.size} y $yMax") // -> ${game.waterPoints}
+        if (round == 2255) {
+            break
+        }
 
     }
     game.draw()
