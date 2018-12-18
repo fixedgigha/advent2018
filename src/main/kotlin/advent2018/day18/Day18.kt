@@ -54,9 +54,19 @@ fun transform() {
     data = newData
 }
 
+fun score(): Long {
+    val treeCount = data.fold(0) { total, chars ->
+        total + chars.filter{ it == '|' }.size
+    }
+    val lumberCount = data.fold(0) { total, chars ->
+        total + chars.filter{ it == '#' }.size
+    }
+    return treeCount.toLong() * lumberCount
+}
+
 fun printData() {
-    data.forEachIndexed { y, chars ->
-        chars.forEachIndexed{ x, char ->
+    data.forEach { chars ->
+        chars.forEach { char ->
             print(char)
         }
         println()
@@ -65,17 +75,16 @@ fun printData() {
 
 fun main(vararg args: String) {
     loadData("input.txt")
-    printData()
-    (1..10).forEach {round->
-        println("Round $round")
-        transform()
-        printData()
-    }
-    val treeCount = data.fold(0) { total, chars ->
-        total + chars.filter{ it == '|' }.size
-    }
-    val lumberCount = data.fold(0) { total, chars ->
-        total + chars.filter{ it == '#' }.size
-    }
-    println("Final score ${treeCount * lumberCount}")
+    val deltas = mutableListOf(0L)
+    //printData()
+    val analysis = (1..10000).map {_->
+            transform()
+            //printData()
+            val score = score()
+            deltas.add(score - deltas.last())
+            score
+        }.mapIndexed { index, i ->  Pair(i, index)}.groupBy { it.first }.entries.sortedByDescending {(k, v) -> v.size  }
+
+
+    println(analysis.take(20).map { Pair(it.key, it.value.size)})
 }
