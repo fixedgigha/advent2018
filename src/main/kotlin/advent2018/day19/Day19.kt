@@ -149,12 +149,30 @@ val realOperationsMap = mapOf<String, (List<Int>, List<Int>) -> List<Int>> (
 
 fun main(vararg args: String) {
     val input = File("src/main/resources/day19/testInput.txt").readLines()
-    val registers = IntArray(6) { _ -> 0 }
+    var registers = listOf(0, 0, 0, 0, 0, 0)
     var ip = Regex("#ip (\\d)").matchEntire(input[0])?.let { it.groupValues[1].toInt() }  ?: -1
     val program = input.subList(1, input.size)
 
     var count = 0
-
+    while (true) {
+        val instruction = program.getOrNull(registers[ip])
+        if (instruction != null) {
+            val (op, codes) = Regex("(\\w{4}) (\\d+(?: )?){3}").matchEntire(instruction)?.let {mr ->
+                Pair(mr.groupValues[1],
+                    (2..4).fold(mutableListOf(0)) {list, index ->
+                        list.add(mr.groupValues[index].toInt())
+                        list
+                    })
+            }?: Pair("crap", emptyList<Int>())
+            val newRegisters = mutableListOf<Int>()
+            newRegisters.addAll(realOperationsMap[op]?.let { it(registers,codes) } ?: registers)
+            newRegisters[ip] = newRegisters[ip + 1]
+            registers = newRegisters
+        }
+        else {
+            break
+        }
+    }
 
     println("Final registers $registers")
 }
