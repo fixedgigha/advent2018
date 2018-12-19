@@ -148,16 +148,15 @@ val realOperationsMap = mapOf<String, (List<Int>, List<Int>) -> List<Int>> (
 
 
 fun main(vararg args: String) {
-    val input = File("src/main/resources/day19/testInput.txt").readLines()
+    val input = File("src/main/resources/day19/input.txt").readLines()
     var registers = listOf(0, 0, 0, 0, 0, 0)
-    var ip = Regex("#ip (\\d)").matchEntire(input[0])?.let { it.groupValues[1].toInt() }  ?: -1
+    var ipr = Regex("#ip (\\d)").matchEntire(input[0])?.let { it.groupValues[1].toInt() }  ?: -1
     val program = input.subList(1, input.size)
 
-    var count = 0
     while (true) {
-        val instruction = program.getOrNull(registers[ip])
+        val instruction = program.getOrNull(registers[ipr])
         if (instruction != null) {
-            val (op, codes) = Regex("(\\w{4}) (\\d+(?: )?){3}").matchEntire(instruction)?.let {mr ->
+            val (op, codes) = Regex("(\\w{4}) (\\d+) (\\d+) (\\d+)").matchEntire(instruction)?.let {mr ->
                 Pair(mr.groupValues[1],
                     (2..4).fold(mutableListOf(0)) {list, index ->
                         list.add(mr.groupValues[index].toInt())
@@ -165,9 +164,16 @@ fun main(vararg args: String) {
                     })
             }?: Pair("crap", emptyList<Int>())
             val newRegisters = mutableListOf<Int>()
-            newRegisters.addAll(realOperationsMap[op]?.let { it(registers,codes) } ?: registers)
-            newRegisters[ip] = newRegisters[ip + 1]
-            registers = newRegisters
+            val func = realOperationsMap[op]
+            if (func != null) {
+                newRegisters.addAll(func(registers, codes))
+                println("ip=${registers[ipr]} $registers $op ${codes.subList(1, 3).joinToString(" ")} $newRegisters")
+                newRegisters[ipr] = newRegisters[ipr] + 1
+                registers = newRegisters
+            }
+            else {
+                println("UNKNOWN OPERATION $op")
+            }
         }
         else {
             break
