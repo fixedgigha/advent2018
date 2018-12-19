@@ -167,7 +167,7 @@ fun main(vararg args: String) {
             val func = realOperationsMap[op]
             if (func != null) {
                 newRegisters.addAll(func(registers, codes))
-                println("ip=${registers[ipr]} $registers $op ${codes.subList(1, 3).joinToString(" ")} $newRegisters")
+                println("ip=${registers[ipr]} $registers $op ${codes.subList(1, 4).joinToString(" ")} $newRegisters")
                 newRegisters[ipr] = newRegisters[ipr] + 1
                 registers = newRegisters
             }
