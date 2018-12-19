@@ -5,13 +5,19 @@ import java.io.File
 
 fun main(vararg args: String) {
     val input = File("src/main/resources/day19/input.txt").readLines()
-    var registers = listOf(1, 0, 0, 0, 0, 0)
+    var registers = //listOf(0, 10551343, 0, 3, 959213, 11)
+    listOf(1, 0, 0, 0, 0, 0)
         //listOf(0, 10551343, 0, 5, 724973, 2)
     var ipr = Regex("#ip (\\d)").matchEntire(input[0])?.let { it.groupValues[1].toInt() }  ?: -1
     val program = input.subList(1, input.size)
 
-    while (true) {
-        val instruction = program.getOrNull(registers[ipr])
+    var count = 0
+    while (count++ < 1000) {
+        val instructionIndex = registers[ipr]
+        if (instructionIndex == 3) {
+            val z = 1
+        }
+        val instruction = program.getOrNull(instructionIndex)
         if (instruction != null) {
             val (op, codes) = Regex("(\\w{4}) (\\d+) (\\d+) (\\d+)").matchEntire(instruction)?.let {mr ->
                 Pair(mr.groupValues[1],
