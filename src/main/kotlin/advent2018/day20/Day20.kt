@@ -4,53 +4,70 @@ import java.io.File
 
 val text = File("src/main/resources/day20/input.txt").readText()
 var current = 1
+val coords = mutableListOf(Triple(0, 0, '0'))
 
-fun score(): List<Char> {
-    val branchScores = mutableListOf<MutableList<Char>>(mutableListOf())
+
+fun score(startLoc: Triple<Int, Int, Char>): Int {
+    val branchScores = mutableListOf(0)
     var currentBranch = 0
     var finished = false
+    var currLoc = startLoc
     while (!finished) {
         print(text[current])
+
         when(text[current]) {
-            '$', ')' -> {
+            '$'-> {
+                finished = true
+            }
+            ')' -> {
                 current++
                 finished = true
              }
             '|' -> {
+                currLoc = startLoc
                 current++
                 currentBranch++
-                branchScores.add(mutableListOf())
+                branchScores.add(0)
             }
             '(' -> {
                 current++
-                branchScores[currentBranch].addAll(score())
+                branchScores[currentBranch] = branchScores[currentBranch] + score(currLoc)
             }
             else -> {
-                branchScores[currentBranch].add(text[current])
+                val newCoords = (1..2).map { a ->
+                    val m = if (a == 1) '|' else '.'
+                    when (text[current]) {
+                        'N' -> currLoc.copy(second = currLoc.second - a, third = m)
+                        'S' -> currLoc.copy(second = currLoc.second + a, third = m)
+                        'W' -> currLoc.copy(first = currLoc.first - a, third = m)
+                        'E' -> currLoc.copy(first = currLoc.first + a, third = m)
+                        else -> currLoc
+                    }
+                }
+                coords.addAll(newCoords)
+                currLoc = newCoords.last()
+                branchScores[currentBranch] += 1
                 current++
             }
         }
     }
     println()
-    return branchScores.sortedByDescending { it.size }.first()
+    return branchScores.sortedByDescending { it }.first()
 }
 
-fun draw(input: List<Pair<Int, Int>>) {
-    val minX = input.fold(Int.MAX_VALUE) {min, point -> Math.min(min, point.first)}
-    val minY = input.fold(Int.MAX_VALUE) {min, point -> Math.min(min, point.second)}
-    val maxX = input.fold(0) {max, point -> Math.max(max, point.first)}
-    val maxY = input.fold(0) {max, point -> Math.max(max, point.second)}
+fun draw() {
+    val input = coords.groupBy {Pair(it.first, it.second)}
+    val minX = input.keys.fold(Int.MAX_VALUE) {min, point -> Math.min(min, point.first)}
+    val minY = input.keys.fold(Int.MAX_VALUE) {min, point -> Math.min(min, point.second)}
+    val maxX = input.keys.fold(0) {max, point -> Math.max(max, point.first)}
+    val maxY = input.keys.fold(0) {max, point -> Math.max(max, point.second)}
 
     (minY..maxY).forEach {y ->
         (minX..maxX).forEach {x ->
             val myPoint = Pair(x, y)
             print(
                 if (input.contains(myPoint)) {
-                    when (myPoint) {
-                        input.last() -> 'X'
-                        Pair(0, 0) -> '0'
-                        else -> '.'
-                    }
+                    input[myPoint]?.first()?.third?:'?'
                 }
                 else {
                     '#'
@@ -62,20 +79,8 @@ fun draw(input: List<Pair<Int, Int>>) {
 }
 
 fun main(vararg args: String) {
-    val score = score()
-    println("Final score ${score.size}")
-    val coords = mutableListOf(Pair(0, 0))
-    score.forEach { c ->
-        val lastPoint = coords.last()
-        coords.addAll((1..2).map {a ->
-            when(c) {
-                'N' -> lastPoint.copy(second = lastPoint.second - a)
-                'S' -> lastPoint.copy(second = lastPoint.second + a)
-                'W' -> lastPoint.copy(first = lastPoint.first - a)
-                'E' -> lastPoint.copy(first = lastPoint.first + a)
-                else -> lastPoint
-            }}
-        )
-    }
-    draw(coords)
+    val score = score(coords.last())
+    println("Final score $score")
+
+    draw()
 }
