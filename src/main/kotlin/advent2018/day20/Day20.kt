@@ -2,18 +2,17 @@ package advent2018.day20
 
 import java.io.File
 
-val text = File("src/main/resources/day20/input.txt").readText()
+val text = File("src/main/resources/day20/testInput.txt").readText()
 var current = 1
-val coords = mutableListOf(Triple(0, 0, '0'))
+val coords = mutableSetOf(Triple(0, 0, '0'))
 
 
-fun score(startLoc: Triple<Int, Int, Char>): Int {
-    val branchScores = mutableListOf(0)
+fun score(startLoc: Triple<Int, Int, Char>): List<Triple<Int, Int, Char>> {
+    val branchScores = mutableListOf<MutableList<Triple<Int, Int, Char>>>(mutableListOf())
     var currentBranch = 0
     var finished = false
     var currLoc = startLoc
     while (!finished) {
-        print(text[current])
 
         when(text[current]) {
             '$'-> {
@@ -27,11 +26,11 @@ fun score(startLoc: Triple<Int, Int, Char>): Int {
                 currLoc = startLoc
                 current++
                 currentBranch++
-                branchScores.add(0)
+                branchScores.add(mutableListOf())
             }
             '(' -> {
                 current++
-                branchScores[currentBranch] = branchScores[currentBranch] + score(currLoc)
+                branchScores[currentBranch].addAll(score(currLoc))
             }
             else -> {
                 val newCoords = (1..2).map { a ->
@@ -46,21 +45,20 @@ fun score(startLoc: Triple<Int, Int, Char>): Int {
                 }
                 coords.addAll(newCoords)
                 currLoc = newCoords.last()
-                branchScores[currentBranch] += 1
+                branchScores[currentBranch].addAll(newCoords)
                 current++
             }
         }
     }
-    println()
-    return branchScores.sortedByDescending { it }.first()
+    return branchScores.sortedByDescending { it.size }.first()
 }
 
 fun draw() {
     val input = coords.groupBy {Pair(it.first, it.second)}
-    val minX = input.keys.fold(Int.MAX_VALUE) {min, point -> Math.min(min, point.first)}
-    val minY = input.keys.fold(Int.MAX_VALUE) {min, point -> Math.min(min, point.second)}
-    val maxX = input.keys.fold(0) {max, point -> Math.max(max, point.first)}
-    val maxY = input.keys.fold(0) {max, point -> Math.max(max, point.second)}
+    val minX = input.keys.fold(Int.MAX_VALUE) {min, point -> Math.min(min, point.first)} - 1
+    val minY = input.keys.fold(Int.MAX_VALUE) {min, point -> Math.min(min, point.second)} - 1
+    val maxX = input.keys.fold(0) {max, point -> Math.max(max, point.first)} + 1
+    val maxY = input.keys.fold(0) {max, point -> Math.max(max, point.second)} + 1
 
     (minY..maxY).forEach {y ->
         (minX..maxX).forEach {x ->
@@ -80,7 +78,9 @@ fun draw() {
 
 fun main(vararg args: String) {
     val score = score(coords.last())
-    println("Final score $score")
+    coords.remove(score.last())
+    coords.add(score.last().copy(third = 'X'))
+    println("Final score ${score.size} ${score.last()}")
 
     draw()
 }
