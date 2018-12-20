@@ -66,17 +66,22 @@ fun draw(input: Map<Pair<Int, Int>, Char>, route: List<Pair<Int, Int>>) {
     val maxX = input.keys.fold(0) { max, point -> Math.max(max, point.first) } + 1
     val maxY = input.keys.fold(0) { max, point -> Math.max(max, point.second) } + 1
 
-    File("../day20.out").printWriter().let { pr ->
+    File("../day20.out").printWriter().use { pr ->
         (minY..maxY).forEach { y ->
             (minX..maxX).forEach { x ->
                 val myPoint = Pair(x, y)
                 val routeChar = input[myPoint]
                 pr.print(
-                    if (routeSet.contains(myPoint)) {
-                        if ('X' == routeChar)
-                            "${ANSI_BLUE}X$ANSI_RESET"
+                    if (myPoint == Pair(0, 0)) {
+                        '0'
+                    }
+                    else if (routeSet.contains(myPoint)) {
+                        if ('X' == routeChar || '0' == routeChar)
+                            //"${ANSI_BLUE}X$ANSI_RESET"
+                            'X'
                         else
-                            "$ANSI_RED~$ANSI_RESET"
+                            //"$ANSI_RED~$ANSI_RESET"
+                            '~'
                     } else if (routeChar != null) {
                         routeChar.toString()
                     } else {
@@ -126,6 +131,7 @@ fun candidatesFrom(course: Map<Pair<Int, Int>, Char>,
     return candidates
 }
 
+
 fun route(course: Map<Pair<Int, Int>, Char>,
           start: Pair<Int, Int> = Pair(0, 0),
           routeSoFar: Set<Pair<Int, Int>> = setOf()): List<List<Pair<Int, Int>>>  {
@@ -135,14 +141,14 @@ fun route(course: Map<Pair<Int, Int>, Char>,
     var current = start
     while (true) {
         val candidates = candidatesFrom(course, current)
-        if (candidates.isEmpty()) {
+        if (candidates.size == 1 && current != Pair(0, 0)) { // i.e. the space we came from
             // We've found a terminal
             return listOf(myRoute)
         }
         val newCandidates = candidates.filterNot { soFar.contains(it) }
         when (newCandidates.size) {
             1 -> {
-                current = candidates.first()
+                current = newCandidates.first()
                 myRoute.add(current)
                 soFar.add(current)
             }
@@ -177,26 +183,19 @@ fun main(vararg args: String) {
     coords.add(target.copy(third = 'X'))
     println("Final score ${score.size} ${score.last()}")
     val course = coords.groupBy {Pair(it.first, it.second)}.mapValues { (k, v) -> v.first().third }
+
+    //draw(course, listOf())
+
     val routes = route(course)
 
-    val routeGroups = routes.groupBy {it.last()}
-    println("Route groups ${routeGroups.size}")
-    if (routeGroups.size > 0) {
-        val guesses = routeGroups.values.map { it.sortedBy { it.size } }.filter {
-            it.first().size > 1001
-        }
-        val longestRoute = guesses.fold(Pair(0, 0)) { (max, min), next ->
-            val innerMax = next.fold(max) { inMax, inNext ->
-                Math.max(inMax, inNext.size)
-            }
-            if (innerMax > max) {
-                Pair(innerMax, next.first().size)
-            } else {
-                Pair(max, min)
-            }
-        }
+    val rooms = coords.filter { it.third == '.' }
 
-        draw(course, guesses.first().first())
-        println("My guess ${guesses.size}  longest route $longestRoute")
-    }
+
+    val roomsWithin1000 = routes.flatMap {route ->
+        route.take(999)
+    }.toSet()
+
+    println("Rooms ${rooms.size}")
+    println("Rooms within 1000 ${roomsWithin1000.size}")
+    println("Guess ${rooms.size - roomsWithin1000.size}")
 }
