@@ -50,11 +50,13 @@ fun score(startLoc: Triple<Int, Int, Char>): List<Triple<Int, Int, Char>> {
             }
         }
     }
-    return branchScores.sortedByDescending { it.size }.first()
+    val sortedBranches = branchScores.sortedByDescending { it.size }
+    // Do I care about equivalently long branches?
+    return sortedBranches.first()
 }
 
 fun draw() {
-    val input = coords.groupBy {Pair(it.first, it.second)}
+    val input = coords.groupBy {Pair(it.first, it.second)}.mapValues { (k, v) -> v.first().third }
     val minX = input.keys.fold(Int.MAX_VALUE) {min, point -> Math.min(min, point.first)} - 1
     val minY = input.keys.fold(Int.MAX_VALUE) {min, point -> Math.min(min, point.second)} - 1
     val maxX = input.keys.fold(0) {max, point -> Math.max(max, point.first)} + 1
@@ -65,7 +67,7 @@ fun draw() {
             val myPoint = Pair(x, y)
             print(
                 if (input.contains(myPoint)) {
-                    input[myPoint]?.first()?.third?:'?'
+                    input[myPoint]?:'?'
                 }
                 else {
                     '#'
@@ -74,6 +76,60 @@ fun draw() {
         }
         println()
     }
+}
+
+val dummyPair = Pair(Int.MIN_VALUE, Int.MIN_VALUE)
+
+fun candidatesFrom(course: Map<Pair<Int, Int>, Char>,
+                   point: Pair<Int, Int>,
+                   routeSoFar: Set<Pair<Int, Int>>): List<Pair<Int, Int>> {
+    val candidates = mutableListOf<Pair<Int, Int>>()
+    val pointWest = point.copy(first = point.first - 2)
+    val doorWest  = point.copy(first = point.first - 1)
+    val moveWest  = course[pointWest]
+    if (moveWest != null && !routeSoFar.contains(pointWest) && moveWest == '.' &&
+            course[doorWest]?:'~' == '|') {
+        candidates.add(pointWest)
+    }
+    val pointEast = point.copy(first = point.first + 2)
+    val doorEast  = point.copy(first = point.first + 1)
+    val moveEast  = course[pointEast]
+    if (moveEast != null && !routeSoFar.contains(pointEast) && moveEast == '.' &&
+        course[doorEast]?:'~' == '|') {
+        candidates.add(pointEast)
+    }
+    val pointNorth = point.copy(first = point.second - 2)
+    val doorNorth  = point.copy(first = point.second - 1)
+    val moveNorth  = course[pointNorth]
+    if (moveNorth != null && !routeSoFar.contains(pointNorth) && moveNorth == '.' &&
+        course[doorNorth]?:'~' == '|') {
+        candidates.add(pointNorth)
+    }
+    val pointSouth = point.copy(first = point.second + 2)
+    val doorSouth  = point.copy(first = point.second + 1)
+    val moveSouth  = course[pointSouth]
+    if (moveSouth != null && !routeSoFar.contains(pointSouth) && moveSouth == '.' &&
+        course[doorSouth]?:'~' == '|') {
+        candidates.add(pointSouth)
+    }
+
+    return candidates
+}
+
+fun route(course: Map<Pair<Int, Int>, Char>,
+          target: Pair<Int, Int>,
+          noLongerThan: Int = Int.MAX_VALUE,
+          start: Pair<Int, Int> = Pair(0, 0),
+          routeSoFar: Set<Pair<Int, Int>> = setOf())  {
+    val myRoute = mutableListOf(start)
+    val soFar = mutableSetOf<Pair<Int, Int>>()
+    soFar.addAll(routeSoFar)
+    var current = start
+    while (myRoute.size < noLongerThan && current != target) {
+
+        val candidates = candidatesFrom(course, current, soFar)
+    }
+
 }
 
 fun main(vararg args: String) {
