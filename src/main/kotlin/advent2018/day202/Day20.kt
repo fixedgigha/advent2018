@@ -1,4 +1,4 @@
-package advent2018.day20
+package advent2018.day202
 
 import java.io.File
 
@@ -84,8 +84,6 @@ fun draw(input: Map<Pair<Int, Int>, Char>, route: List<Pair<Int, Int>>) {
     }
 }
 
-val dummyPair = Pair(Int.MIN_VALUE, Int.MIN_VALUE)
-
 val steps = setOf('0', '.', 'X')
 
 fun candidatesFrom(course: Map<Pair<Int, Int>, Char>,
@@ -125,18 +123,13 @@ fun candidatesFrom(course: Map<Pair<Int, Int>, Char>,
 }
 
 fun route(course: Map<Pair<Int, Int>, Char>,
-          target: Pair<Int, Int>,
-          noLongerThan: Int = Int.MAX_VALUE,
           start: Pair<Int, Int> = Pair(0, 0),
-          routeSoFar: Set<Pair<Int, Int>> = setOf()): List<Pair<Int, Int>>  {
+          routeSoFar: Set<Pair<Int, Int>> = setOf()): List<List<Pair<Int, Int>>>  {
     val myRoute = mutableListOf(start)
     val soFar = mutableSetOf(start)
     soFar.addAll(routeSoFar)
     var current = start
-    while (/*myRoute.size < noLongerThan &&*/ current != target) {
-        if (current == Pair(-4, 4)) {
-            val z = 1
-        }
+    while (true) {
         val candidates = candidatesFrom(course, current, soFar)
         when (candidates.size) {
             1 -> {
@@ -145,28 +138,23 @@ fun route(course: Map<Pair<Int, Int>, Char>,
                 soFar.add(current)
             }
             0-> {
-                return emptyList()
+                return listOf(myRoute)
             }
             else -> {
-                var subNoLonger = noLongerThan - myRoute.size
-                val subRoutes = candidates.map {can ->
-                    val canRoute = route(course, target, subNoLonger, can, soFar)
-                    subNoLonger = Math.min(subNoLonger, myRoute.size + canRoute.size)
-                    canRoute
-                }.filter{ it.isNotEmpty() }.sortedByDescending { it.size }
-                if (subRoutes.size == 0) {
-                    return emptyList()
+                return candidates.flatMap {can ->
+                    route(course, can, soFar)
+                }.map { newRoute ->
+                    val superRoute = mutableListOf<Pair<Int, Int>>()
+                    superRoute.addAll(myRoute)
+                    superRoute.addAll(newRoute)
+                    superRoute
                 }
-                myRoute.addAll(subRoutes.first())
-                return myRoute
             }
         }
     }
-    if (current == target) {
-        myRoute.add(current)
-    }
-   // return if (myRoute.size < noLongerThan) myRoute else emptyList()
-    return myRoute
+   // unreachab;e!!
+    println("WARN unreachable $start")
+    return emptyList()
 
 }
 
@@ -177,7 +165,23 @@ fun main(vararg args: String) {
     coords.add(target.copy(third = 'X'))
     println("Final score ${score.size} ${score.last()}")
     val course = coords.groupBy {Pair(it.first, it.second)}.mapValues { (k, v) -> v.first().third }
-    val route = route(course, Pair(target.first, target.second), 33)
-    println("Route length ${route.size}")
-    draw(course, route)
+    val routes = route(course)
+
+    val routeGroups = routes.groupBy {it.last()}
+    println("Route groups ${routeGroups.size}")
+    val guesses = routeGroups.values.map { it.sortedBy { it.size } }.filter {
+        it.first().size > 1001
+    }
+    val longestRoute = guesses.fold(Pair(0, 0)) { (max, min), next ->
+        val innerMax = next.fold(max) { inMax, inNext ->
+            Math.max(inMax, inNext.size)
+        }
+        if (innerMax > max) {
+            Pair(innerMax, next.first().size)
+        }
+        else {  Pair(max, min) }
+    }
+
+    //draw(course, guesses.first().first())
+    println("My guess ${guesses.size}  longest route $longestRoute")
 }
