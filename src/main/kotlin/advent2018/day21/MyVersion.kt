@@ -1,9 +1,9 @@
 package advent2018.day21
 
 fun main(vararg args: String) {
-    val killers = mutableListOf<Int>()
     val killSet = mutableSetOf<Int>()
-    var result = Int.MAX_VALUE
+    var firstKiller = Int.MIN_VALUE
+    var lastKiller = Int.MAX_VALUE
     var zero = 0
     //var one = 0
     //var two = zero
@@ -29,14 +29,12 @@ fun main(vararg args: String) {
                     ) and 16777215 // 5679648  -> 12
             //five = if (256 > four) 1 else 0 // -> 13
             if (256 > four) {  // --> 14 15
-                if (!killSet.add(three)) {
-                    result = killSet.last()
-                    println("Duplicate $three")
-                    programContinuing = false
+                if (killSet.isEmpty()) {
+                    firstKiller = three
                 }
-                killers.add(three)
-                if (killers.size % 100 == 0) {
-                    println("Kill count ${killers.size} ${killers.last()}")
+                if (!killSet.add(three)) {
+                    lastKiller = three
+                    programContinuing = false
                 }
                 //programContinuing = three != zero
                 break
@@ -51,8 +49,8 @@ fun main(vararg args: String) {
             }
         }
     }
-    println("Part one result ${killers.first()}")
-    println("Part two result $result")
+    println("Part one result $firstKiller")
+    println("Part two result $lastKiller")
 
 }
 
