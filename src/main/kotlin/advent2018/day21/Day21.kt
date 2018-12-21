@@ -1,11 +1,14 @@
 package advent2018.day21
 
+import advent2018.day19.realOperationsMap
+import java.io.File
+
 val program = """
 #ip 2
-seti 123 0 3
-bani 3 456 3
 eqri 3 72 3
 addr 3 2 2
+seti 123 0 3
+bani 3 456 3
 seti 0 0 2
 seti 0 4 3
 bori 3 65536 4
@@ -37,5 +40,37 @@ seti 5 8 2
 
 
 fun main(vararg args: String) {
+    val input = program.lines()
+    var registers = listOf(0, 0, 0, 0, 0, 0)
+    var ipr = Regex("#ip (\\d)").matchEntire(input[0])?.let { it.groupValues[1].toInt() }  ?: -1
+    val program = input.subList(1, input.size)
 
+    while (true) {
+        val instruction = program.getOrNull(registers[ipr])
+        if (instruction != null) {
+            val (op, codes) = Regex("(\\w{4}) (\\d+) (\\d+) (\\d+)").matchEntire(instruction)?.let {mr ->
+                Pair(mr.groupValues[1],
+                    (2..4).fold(mutableListOf(0)) {list, index ->
+                        list.add(mr.groupValues[index].toInt())
+                        list
+                    })
+            }?: Pair("crap", emptyList<Int>())
+            val newRegisters = mutableListOf<Int>()
+            val func = realOperationsMap[op]
+            if (func != null) {
+                newRegisters.addAll(func(registers, codes))
+                println("ip=${registers[ipr]} $registers $op ${codes.subList(1, 4).joinToString(" ")} $newRegisters")
+                newRegisters[ipr] = newRegisters[ipr] + 1
+                registers = newRegisters
+            }
+            else {
+                println("UNKNOWN OPERATION $op")
+            }
+        }
+        else {
+            break
+        }
+    }
+
+    println("Final registers $registers")
 }
