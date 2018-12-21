@@ -8,10 +8,10 @@ val pointScores = mutableMapOf<Pair<Int, Int>, Int>()
 
 fun adjust(point: Pair<Int, Int>, dir: Char) =
     when(dir) {
-        'W' -> point.copy(point.first - 1)
-        'E' -> point.copy(point.first + 1)
-        'N' -> point.copy(point.second - 1)
-        'S' -> point.copy(point.second + 1)
+        'W' -> point.copy(first = point.first - 1)
+        'E' -> point.copy(first = point.first + 1)
+        'N' -> point.copy(second = point.second - 1)
+        'S' -> point.copy(second = point.second + 1)
         else -> point
     }
 
