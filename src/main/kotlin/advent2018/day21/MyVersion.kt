@@ -33,10 +33,12 @@ fun main(vararg args: String) {
                     firstKiller = three
                 }
                 if (!killSet.add(three)) {
-                    lastKiller = three
-                    programContinuing = false
+                    zero = three
                 }
-                //programContinuing = three != zero
+                else {
+                    lastKiller = three
+                }
+                programContinuing = three != zero
                 break
             }
             five = 0 // alreddy is --> 17
