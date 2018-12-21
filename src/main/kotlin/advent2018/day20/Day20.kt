@@ -4,22 +4,20 @@ import java.io.File
 val text = File("src/main/resources/day20/input.txt").readText()
 var current = 1
 
-data class Node(val startScore: Int = 0, var count: Int = 0, var subNodes: MutableList<Node>  = mutableListOf()) {
-    fun total() = startScore + count
+val pointScores = mutableMapOf<Pair<Int, Int>, Int>()
 
-    fun scoreMil(): Int =
-            if (startScore < 1000 && startScore + count > 1000)
-                (startScore + count) - 1000
-            else if (startScore > 1000)
-                count
-            else
-                0
-}
+fun adjust(point: Pair<Int, Int>, dir: Char) =
+    when(dir) {
+        'W' -> point.copy(point.first - 1)
+        'E' -> point.copy(point.first + 1)
+        'N' -> point.copy(point.second - 1)
+        'S' -> point.copy(point.second + 1)
+        else -> point
+    }
 
-fun loadNodes(startScore: Int, endChar: Char = ')'): MutableList<Node> {
-    val branchScores = mutableListOf(Node(startScore))
-    var currentBranch = 0
+fun loadNodes(fromPoint: Pair<Int, Int>, endChar: Char = ')') {
     var finished = false
+    var curPoint = fromPoint
     while (!finished) {
 
         when(text[current]) {
@@ -29,46 +27,39 @@ fun loadNodes(startScore: Int, endChar: Char = ')'): MutableList<Node> {
              }
             '|' -> {
                 current++
-                currentBranch++
-                branchScores.add(Node(startScore))
+                curPoint = fromPoint
             }
             '(' -> {
                 current++
-                val subNodes = loadNodes(branchScores[currentBranch].total())
-                if (subNodes.last().count == 0) {
-                    // out and bck scenario
-                    if (subNodes.size != 2) {
-                        println("WTF")
-                    }
-                    subNodes.first().count /= 2
-                    subNodes.removeAt(subNodes.lastIndex)
-                }
-                branchScores[currentBranch].subNodes.addAll(subNodes)
+                loadNodes(curPoint)
             }
             else -> {
-                branchScores[currentBranch].count += 1
+                val newPoint = adjust(curPoint, text[current])
+                val incrementPrevious = (pointScores[curPoint]?:0) + 1
+                pointScores[newPoint] = Math.min(incrementPrevious, pointScores[newPoint]?:Int.MAX_VALUE)
+                curPoint = newPoint
                 current++
             }
         }
     }
-    return branchScores
 }
 
-fun part1Total(node: Node): Int =
-    node.subNodes.map { part1Total(it) }.max()?:node.total()
+fun part1Total(): Int =
+    pointScores.values.max()?:0
 
-fun part2Total(node: Node): Int =
-    node.scoreMil() + node.subNodes.map { part2Total(it) }.sum()
+fun part2Total(): Int =
+    pointScores.values.filter { it > 1000}.size
 
 
 fun main(vararg args: String) {
-    val rootNodes = loadNodes(0, '$')
+    loadNodes(Pair(0, 0), '$')
 
-    val part1Total = part1Total(rootNodes.first())
+    val part1Total = part1Total()
 
     println("Part 1 $part1Total")
 
-    val part2Total = part2Total(rootNodes.first())
+    val part2Total = part2Total()
 
     println("Part 2 $part2Total")
+
 }
