@@ -1,14 +1,13 @@
 package advent2018.day21
 
 import advent2018.day19.realOperationsMap
-import java.io.File
 
 val program = """
 #ip 2
-eqri 3 72 3
-addr 3 2 2
 seti 123 0 3
 bani 3 456 3
+eqri 3 72 3
+addr 3 2 2
 seti 0 0 2
 seti 0 4 3
 bori 3 65536 4
@@ -35,8 +34,7 @@ setr 5 3 4
 seti 7 4 2
 eqrr 3 0 5
 addr 5 2 2
-seti 5 8 2
-""".trimIndent()
+seti 5 8 2""".trimIndent()
 
 
 fun main(vararg args: String) {

@@ -1,34 +1,47 @@
 package advent2018.day21
 
 fun main(vararg args: String) {
-
-    var three = 123
-    while (true) {
-        if (three and 456 == 72) {
-            three = 0
-            var four = 65536 // thre  and 65 //536
-            three = 1107552
-            var five = four and 255 // 0
-            three += five // 1107552
-            three = three and 16777215 //1107552
-            three *= 65899 // -27874784
-            five = if (256 > four) 1 else 0
-            if (five == 1) {
-                // GOTO  27
+    var zero = 0
+    //var one = 0
+    //var two = zero
+    var three = 123 // --> 0
+    var four = 0
+    var five = 0
+    while (true) { // --> loop back from 3 4
+        three = three and 456 // 123 | 456 = 72--> 1
+        if (three == 72) // --> 2
+            break
+    }
+    three = 0 // --> 5
+    var programContinuing = true
+    while (programContinuing) {
+        four = three or 65536 // three  and 65536 = 65536 --> 6
+        three = 1107552 // --> 7
+        // LOOP to HERE FROm  BOTTOM?
+        var innerLooping = true
+        while(innerLooping) {
+            //five = four and 255 // 0 --> 8
+            three += (four and 255) // 1107552 --> 9
+            three = three and 16777215 //1107552 -> 10
+            three *= 65899 // -27874784 -> 11
+            three = three and 16777215 // 5679648  -> 12
+            //five = if (256 > four) 1 else 0 // -> 13
+            if (256 > four) {  // --> 14 15
+                programContinuing = three == zero
+                break
             }
-            five = 0 // alreddy is
-            while (true) { // --> 26 (llop back)
-                var one = five + 1 // 1  --> 18
-                one *= 256 // 256
-                one = if (one > four) 1 else 0
-                if (one == 0) {
-                    five += 1 // -- 35
+            five = 0 // alreddy is --> 17
+            while (true) { // --> 25 (loop back)
+                if ((five + 1) * 256 > four) { // -> 20
+                    four = five // --> 26
+                    innerLooping = false
+                    break // goto 6
                 }
+                five += 1 // --> 24
             }
-        }
-        else {
-            continue
         }
     }
+
+
 }
 
