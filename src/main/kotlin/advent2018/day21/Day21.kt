@@ -50,8 +50,13 @@ fun main(vararg args: String) {
         val instruction = program.getOrNull(registers[ipr])
         if (instruction == "gtir 256 4 5") {
             if (registers[4] < 256) {
-                if (killers.add(registers[3]))
+                if (lastKiller == -1) {
+                    println("First killer ${registers[3]}")
+                }
+                if (killers.add(registers[3])) {
                     lastKiller = registers[3]
+                    println("Killer ${lastKiller} at ${LocalDateTime.now()}")
+                }
                 else
                     println("Duplicate ${registers[3]} at ${killers.size} last killer $lastKiller")
                 //println("Completion test registers = ${registers.subList(3, 5)}")
