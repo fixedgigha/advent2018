@@ -1,6 +1,7 @@
 package advent2018.day21
 
 import advent2018.day19.realOperationsMap
+import java.time.LocalDateTime
 
 val program = """
 #ip 2
@@ -36,15 +37,26 @@ eqrr 3 0 5
 addr 5 2 2
 seti 5 8 2""".trimIndent()
 
-
+val killers = mutableSetOf<Int>()
+var lastKiller = -1
 fun main(vararg args: String) {
     val input = program.lines()
     var registers = listOf(0, 0, 0, 0, 0, 0)
     var ipr = Regex("#ip (\\d)").matchEntire(input[0])?.let { it.groupValues[1].toInt() }  ?: -1
     val program = input.subList(1, input.size)
 
-    while (true) {
+    val stopAt = LocalDateTime.now().plusMinutes(30)
+    while (LocalDateTime.now() < stopAt) {
         val instruction = program.getOrNull(registers[ipr])
+        if (instruction == "gtir 256 4 5") {
+            if (registers[4] < 256) {
+                if (killers.add(registers[3]))
+                    lastKiller = registers[3]
+                else
+                    println("Duplicate ${registers[3]} at ${killers.size} last killer $lastKiller")
+                //println("Completion test registers = ${registers.subList(3, 5)}")
+            }
+        }
         if (instruction != null) {
             val (op, codes) = Regex("(\\w{4}) (\\d+) (\\d+) (\\d+)").matchEntire(instruction)?.let {mr ->
                 Pair(mr.groupValues[1],
@@ -57,7 +69,7 @@ fun main(vararg args: String) {
             val func = realOperationsMap[op]
             if (func != null) {
                 newRegisters.addAll(func(registers, codes))
-                println("ip=${registers[ipr]} $registers $op ${codes.subList(1, 4).joinToString(" ")} $newRegisters")
+             //   println("ip=${registers[ipr]} $registers $op ${codes.subList(1, 4).joinToString(" ")} $newRegisters")
                 newRegisters[ipr] = newRegisters[ipr] + 1
                 registers = newRegisters
             }
@@ -71,4 +83,6 @@ fun main(vararg args: String) {
     }
 
     println("Final registers $registers")
+    println("There are ${killers.size} killers ${killers.min()} ${killers.last()}")
+
 }

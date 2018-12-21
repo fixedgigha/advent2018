@@ -21,10 +21,10 @@ fun main(vararg args: String) {
         var innerLooping = true
         while(innerLooping) {
             //five = four and 255 // 0 --> 8
-            three += (four and 255) // 1107552 --> 9
-            three = three and 16777215 //1107552 -> 10
-            three *= 65899 // -27874784 -> 11
-            three = three and 16777215 // 5679648  -> 12
+            three = (((three + (four and 255)) // 1107552 --> 9
+                        and 16777215) //1107552 -> 10
+                        * 65899 // -27874784 -> 11
+                        )  and 16777215 // 5679648  -> 12
             //five = if (256 > four) 1 else 0 // -> 13
             if (256 > four) {  // --> 14 15
                 programContinuing = three == zero
