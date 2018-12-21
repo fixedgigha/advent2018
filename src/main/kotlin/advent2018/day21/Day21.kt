@@ -1,6 +1,6 @@
 package advent2018.day21
 
-const val program = """
+val program = """
 #ip 2
 seti 123 0 3
 bani 3 456 3
