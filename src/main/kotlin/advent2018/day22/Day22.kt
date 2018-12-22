@@ -1,7 +1,5 @@
 package advent2018.day22
 
-import kotlin.math.absoluteValue
-
 val target = Pair(7,770)//Pair(10, 10)//
 const val depth = 10647//510//
 
