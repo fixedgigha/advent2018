@@ -1,5 +1,6 @@
 package advent2018.day23
 
+import advent2018.day13.intersection
 import java.io.File
 import kotlin.math.absoluteValue
 
@@ -12,6 +13,10 @@ data class Nanobot(val pos: Triple<Int, Int, Int>, val radius: Int) {
 
     fun inRange(nano: Nanobot): Boolean =
             distance(nano) <= radius
+
+    fun intersects(nano: Nanobot): Boolean =
+            distance(nano) <= radius + nano.radius
+
 
 }
 
@@ -29,4 +34,9 @@ fun main(vararg args: String) {
     println("Max radius ${focal.radius}")
     val result = nanos.filter(focal::inRange).count()
     println("Part 1 result $result")
+
+    val interSections = mutableMapOf<Nanobot, List<Nanobot>>()
+    nanos.forEach { candidate -> interSections[candidate] = nanos.filter{ test -> candidate.intersects(test) } }
+    val inters = interSections.entries.sortedByDescending { (k, v) -> v.size}
+    println("Most intersections ${inters.first().key} with ${inters.first().value.size}")
 }
