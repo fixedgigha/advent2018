@@ -24,6 +24,8 @@ val regex = Regex("pos=<(-?\\d+),(-?\\d+),(-?\\d+)>, r=(\\d+)")
 
 val nonBot = Nanobot(Triple(Int.MIN_VALUE, Int.MIN_VALUE, Int.MIN_VALUE), Int.MIN_VALUE)
 
+fun absPoints(points: Triple<Int, Int, Int>) = points.first.absoluteValue + points.second.absoluteValue + points.third.absoluteValue
+
 fun main(vararg args: String) {
     val nanos = File("src/main/resources/day23/input.txt").readLines().map {line ->
         regex.matchEntire(line)?.let {mr ->
@@ -35,8 +37,42 @@ fun main(vararg args: String) {
     val result = nanos.filter(focal::inRange).count()
     println("Part 1 result $result")
 
-    val interSections = mutableMapOf<Nanobot, List<Nanobot>>()
-    nanos.forEach { candidate -> interSections[candidate] = nanos.filter{ test -> candidate.intersects(test) } }
-    val inters = interSections.entries.sortedByDescending { (k, v) -> v.size}
-    println("Most intersections ${inters.first().key} with ${inters.first().value.size}")
+    var minX = nanos.fold(Int.MAX_VALUE) {current, nano-> Math.min(current, nano.pos.first) }
+    var maxX = nanos.fold(Int.MIN_VALUE) {current, nano-> Math.max(current, nano.pos.first) }
+    var minY = nanos.fold(Int.MAX_VALUE) {current, nano-> Math.min(current, nano.pos.second) }
+    var maxY = nanos.fold(Int.MIN_VALUE) {current, nano-> Math.max(current, nano.pos.second) }
+    var minZ = nanos.fold(Int.MAX_VALUE) {current, nano-> Math.min(current, nano.pos.third) }
+    var maxZ = nanos.fold(Int.MIN_VALUE) {current, nano-> Math.max(current, nano.pos.third) }
+
+    var search = 1
+    while (search < (maxX - minX)) search *= 2
+    var found: Nanobot? = null
+    while (found == null) {
+        var best = Pair(Triple(0, 0, 0), 0)
+        (minZ..maxZ + 1 step(search)).forEach {z ->
+            (minY..maxY + 1 step(search)).forEach { y ->
+                (minX..maxX + 1 step (search)).forEach { x ->
+                    val test = Nanobot(pos = Triple(x, y, z), radius = 0)
+                    val score = nanos.filter { nano -> (nano.distance(test) - nano.radius) <= search }.count()
+                    if (score > best.second || (score == best.second && absPoints(test.pos) < absPoints(best.first))) {
+                        best = Pair(test.pos, score)
+                    }
+                }
+            }
+        }
+        if (search == 1) {
+            found = Nanobot(pos = best.first, radius = 0)
+        }
+        else {
+            minX = best.first.first - search
+            maxX = best.first.first + search
+            minY = best.first.second - search
+            maxY = best.first.second + search
+            minZ = best.first.third - search
+            maxZ = best.first.third + search
+            search /= 2
+        }
+    }
+    println("Result $found")
+    println(if (found != null) absPoints(found.pos) else 0)
 }
