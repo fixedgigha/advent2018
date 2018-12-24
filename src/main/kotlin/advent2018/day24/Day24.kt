@@ -4,6 +4,8 @@ import java.io.File
 
 val groupRegex = Regex("(\\d+) units each with (\\d+) hit points (.*)with an attack that does (\\d+) (\\w+) damage at initiative (\\d+)")
 
+val immuneBoost = 39
+
 data class Group(val group: String,
                  val order: Int,
                  var units: Int,
@@ -55,9 +57,15 @@ data class Group(val group: String,
         val target = if (isAlive() && workingList.isNotEmpty()) {
             val g0 = workingList.sortedByDescending { damageTo(it) }
             mostDamage = damageTo(g0.first())
-            val g1 = g0.takeWhile { damageTo(it) == mostDamage }
-            val g2 = g1.sorted()
-            g2.first()
+            if (mostDamage > 0) {
+                val g1 = g0.takeWhile { damageTo(it) == mostDamage }
+                val g2 = g1.sorted()
+                g2.first()
+            }
+            else {
+                null
+            }
+
         }
         else {
             null
@@ -105,7 +113,7 @@ fun loadGroups(fileName: String) {
                 val units = match.groupValues[1].toInt()
                 val hitp = match.groupValues[2].toInt()
                 val notes = match.groupValues[3]
-                val damage = match.groupValues[4].toInt()
+                val damage = match.groupValues[4].toInt() + if (teamLabel == "Immune") immuneBoost else 0
                 val atkType = match.groupValues[5]
                 val initiative = match.groupValues[6].toInt()
                 val (weak, immune) = processNotes(notes)
@@ -156,7 +164,7 @@ fun dump() {
 }
 
 fun main(vararg args: String) {
-    loadGroups("src/main/resources/day24/testInput.txt")
+    loadGroups("src/main/resources/day24/input.txt")
     dump()
     while(round()) {
         dump()
