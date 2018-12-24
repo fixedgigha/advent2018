@@ -4,7 +4,31 @@ import java.io.File
 
 val groupRegex = Regex("(\\d+) units each with (\\d+) hit points (.*)with an attack that does (\\d+) (\\w+) damage at initiative (\\d+)")
 
-data class Group(var units: Int, var hitp: Int, val atkType: String, val damage: Int, val initv: Int, val immune: List<String>, val weak:  List<String>)
+data class Group(var units: Int,
+                 var hitp: Int,
+                 val atkType: String,
+                 val damage: Int,
+                 val initv: Int,
+                 val immune: List<String>,
+                 val weak:  List<String>): Comparable<Group>{
+    override fun compareTo(other: Group) =
+        when {
+            effectPower() > other.effectPower() -> -1
+            effectPower() < other.effectPower() -> 1
+            else -> if (initv > other.initv) -1 else 1
+        }
+
+    fun effectPower() = units * damage
+
+    fun isAlive() = units > 0
+
+    fun damageTo(target: Group) =
+        when {
+            target.immune.contains(atkType) -> 0
+            target.weak.contains(atkType) -> 2 * effectPower()
+            else -> effectPower()
+        }
+}
 
 val immune =  mutableListOf<Group>()
 val infect = mutableListOf<Group>()
@@ -47,6 +71,23 @@ fun loadGroups(fileName: String) {
             }
         }
     }
+}
+
+fun chooseTargets(from: List<Group>, to: List<Group>) : Map<Group, Group> {
+    val result = mutableMapOf<Group, Group>()
+    val workingList = mutableListOf<Group>()
+    workingList.addAll(to.filter{ it.isAlive() }.sorted() )
+    from.forEach {attacker ->
+        if (workingList.isNotEmpty()) {
+            workingList.sortByDescending { attacker.damageTo(it) }
+            val mostDamage = attacker.damageTo(workingList.first())
+            val target = workingList.takeWhile { attacker.damageTo(it) == mostDamage }.sorted().first()
+            workingList.remove(target)
+            result[attacker] = target
+        }
+    }
+
+    return result
 }
 
 fun main(vararg args: String) {
