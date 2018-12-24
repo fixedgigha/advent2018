@@ -11,23 +11,30 @@ data class Group(var units: Int,
                  val initv: Int,
                  val immune: List<String>,
                  val weak:  List<String>): Comparable<Group>{
-    override fun compareTo(other: Group) =
-        when {
-            effectPower() > other.effectPower() -> -1
-            effectPower() < other.effectPower() -> 1
+    override fun compareTo(other: Group): Int {
+        val myEff = effectPower()
+        val otherEff = other.effectPower()
+        val result = when {
+            myEff > otherEff -> -1
+            myEff < otherEff -> 1
             else -> if (initv > other.initv) -1 else 1
         }
+        return result
+    }
 
     fun effectPower() = units * damage
 
     fun isAlive() = units > 0
 
-    fun damageTo(target: Group) =
+    fun damageTo(target: Group): Int {
+        val damage =
         when {
             target.immune.contains(atkType) -> 0
             target.weak.contains(atkType) -> 2 * effectPower()
             else -> effectPower()
         }
+        return damage
+    }
 
     fun receiveDamage(hits: Int) {
         units -= Math.min(hits / hitp, units)
@@ -47,10 +54,13 @@ fun processNotes(input: String): Pair<List<String>, List<String>> {
     else {
         val weak = mutableListOf<String>()
         val immune = mutableListOf<String>()
-        input.trim(' ').trim('(').trim(')').split(";").forEach { item ->
+        val trimmed = input.trim(' ').trim('(').trim(')')
+        val splits = trimmed.split("; ")
+        splits.forEach { item ->
             notesRegex.matchEntire(item)?. let {match ->
                 val loadGroup = if (match.groupValues[1] == "immune") immune else weak
-                loadGroup.addAll(match.groupValues[2].split(", "))
+                val tokens = match.groupValues[2].split(", ")
+                loadGroup.addAll(tokens)
             }
         }
         Pair(weak, immune)
@@ -81,11 +91,13 @@ fun chooseTargets(from: List<Group>, to: List<Group>) : Map<Group, Group> {
     val result = mutableMapOf<Group, Group>()
     val workingList = mutableListOf<Group>()
     workingList.addAll(to.filter{ it.isAlive() }.sorted() )
-    from.forEach {attacker ->
+    from.sorted().forEach {attacker ->
         if (workingList.isNotEmpty()) {
             workingList.sortByDescending { attacker.damageTo(it) }
             val mostDamage = attacker.damageTo(workingList.first())
-            val target = workingList.takeWhile { attacker.damageTo(it) == mostDamage }.sorted().first()
+            val g1 = workingList.takeWhile { attacker.damageTo(it) == mostDamage }
+            val g2 = g1.sorted()
+            val target = g2.first()
             workingList.remove(target)
             result[attacker] = target
         }
