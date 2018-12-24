@@ -4,7 +4,9 @@ import java.io.File
 
 val groupRegex = Regex("(\\d+) units each with (\\d+) hit points (.*)with an attack that does (\\d+) (\\w+) damage at initiative (\\d+)")
 
-data class Group(var units: Int,
+data class Group(val group: String,
+                 val order: Int,
+                 var units: Int,
                  val hitp: Int,
                  val atkType: String,
                  val damage: Int,
@@ -39,6 +41,31 @@ data class Group(var units: Int,
     fun receiveDamage(hits: Int) {
         units -= Math.min(hits / hitp, units)
     }
+
+    fun attack(target: Group) {
+        if (isAlive()) {
+            val damageTo = damageTo(target)
+            println("ATTACK:  $group$order -> ${target.group + target.order} : $damageTo ${Math.min(damageTo / target.hitp, target.units)}")
+            target.receiveDamage(damageTo)
+        }
+    }
+
+    fun chooseTarget(workingList: List<Group>): Group? {
+        var mostDamage = 0
+        val target = if (isAlive() && workingList.isNotEmpty()) {
+            val g0 = workingList.sortedByDescending { damageTo(it) }
+            mostDamage = damageTo(g0.first())
+            val g1 = g0.takeWhile { damageTo(it) == mostDamage }
+            val g2 = g1.sorted()
+            g2.first()
+        }
+        else {
+            null
+        }
+        println("CHOICE: $group$order -> ${target?.group + target?.order} : $mostDamage")
+        return target
+    }
+
 }
 
 val immune =  mutableListOf<Group>()
@@ -69,10 +96,11 @@ fun processNotes(input: String): Pair<List<String>, List<String>> {
 
 fun loadGroups(fileName: String) {
     var loadGroup =  mutableListOf<Group>()
+    var teamLabel = ""
     File(fileName).readLines().forEach {line ->
         when (line) {
-            "Immune System:" -> loadGroup = immune
-            "Infection:" -> loadGroup = infect
+            "Immune System:" -> { loadGroup = immune; teamLabel = "Immune" }
+            "Infection:" -> { loadGroup = infect; teamLabel = "Infect" }
             else -> groupRegex.matchEntire(line) ?. let {match ->
                 val units = match.groupValues[1].toInt()
                 val hitp = match.groupValues[2].toInt()
@@ -81,7 +109,7 @@ fun loadGroups(fileName: String) {
                 val atkType = match.groupValues[5]
                 val initiative = match.groupValues[6].toInt()
                 val (weak, immune) = processNotes(notes)
-                loadGroup.add(Group(units, hitp, atkType, damage, initiative, immune, weak))
+                loadGroup.add(Group(teamLabel, loadGroup.size + 1, units, hitp, atkType, damage, initiative, immune, weak))
             }
         }
     }
@@ -93,13 +121,11 @@ fun chooseTargets(from: List<Group>, to: List<Group>) : Map<Group, Group> {
     workingList.addAll(to.filter{ it.isAlive() }.sorted() )
     from.sorted().forEach {attacker ->
         if (workingList.isNotEmpty()) {
-            workingList.sortByDescending { attacker.damageTo(it) }
-            val mostDamage = attacker.damageTo(workingList.first())
-            val g1 = workingList.takeWhile { attacker.damageTo(it) == mostDamage }
-            val g2 = g1.sorted()
-            val target = g2.first()
-            workingList.remove(target)
-            result[attacker] = target
+            val target = attacker.chooseTarget(workingList)
+            if (target != null) {
+                workingList.remove(target)
+                result[attacker] = target
+            }
         }
     }
 
@@ -114,11 +140,7 @@ fun round(): Boolean {
     superGroup.putAll(infToImn)
     val order = superGroup.keys.toList().sortedByDescending { it.initv }
     val attacks = order.map { Pair(it, superGroup[it]) }
-    attacks.forEach { (attacker, target) ->
-        if (attacker.isAlive() && target != null) {
-            target.receiveDamage(attacker.damageTo(target))
-        }
-    }
+    attacks.forEach { (attacker, target) -> if (target != null) attacker.attack(target) }
     return immune.firstOrNull { it.isAlive() } != null && infect.firstOrNull { it.isAlive() } != null
 }
 
@@ -134,7 +156,7 @@ fun dump() {
 }
 
 fun main(vararg args: String) {
-    loadGroups("src/main/resources/day24/input.txt")
+    loadGroups("src/main/resources/day24/testInput.txt")
     dump()
     while(round()) {
         dump()
@@ -142,4 +164,5 @@ fun main(vararg args: String) {
     dump()
     println("Immune score ${immune.map { it.units }.sum()}")
     println("Infect score ${infect.map { it.units }.sum()}")
+    // 19293 too low
 }
