@@ -112,11 +112,11 @@ fun round(): Boolean {
     val infToImn = chooseTargets(infect, immune)
     superGroup.putAll(imnToInf)
     superGroup.putAll(infToImn)
-    val order = superGroup.keys.toList().sortedBy { it.initv }
-    order.forEach {attacker ->
-        if (attacker.isAlive()) {
-            val target = superGroup[attacker]
-            target?.receiveDamage(attacker.damageTo(target))
+    val order = superGroup.keys.toList().sortedByDescending { it.initv }
+    val attacks = order.map { Pair(it, superGroup[it]) }
+    attacks.forEach { (attacker, target) ->
+        if (attacker.isAlive() && target != null) {
+            target.receiveDamage(attacker.damageTo(target))
         }
     }
     return immune.firstOrNull { it.isAlive() } != null && infect.firstOrNull { it.isAlive() } != null
@@ -134,10 +134,12 @@ fun dump() {
 }
 
 fun main(vararg args: String) {
-    loadGroups("src/main/resources/day24/testInput.txt")
+    loadGroups("src/main/resources/day24/input.txt")
     dump()
     while(round()) {
         dump()
     }
     dump()
+    println("Immune score ${immune.map { it.units }.sum()}")
+    println("Infect score ${infect.map { it.units }.sum()}")
 }
