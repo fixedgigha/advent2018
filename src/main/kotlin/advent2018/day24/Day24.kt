@@ -5,7 +5,7 @@ import java.io.File
 val groupRegex = Regex("(\\d+) units each with (\\d+) hit points (.*)with an attack that does (\\d+) (\\w+) damage at initiative (\\d+)")
 
 data class Group(var units: Int,
-                 var hitp: Int,
+                 val hitp: Int,
                  val atkType: String,
                  val damage: Int,
                  val initv: Int,
@@ -28,6 +28,10 @@ data class Group(var units: Int,
             target.weak.contains(atkType) -> 2 * effectPower()
             else -> effectPower()
         }
+
+    fun receiveDamage(hits: Int) {
+        units -= Math.min(hits / hitp, units)
+    }
 }
 
 val immune =  mutableListOf<Group>()
@@ -90,8 +94,23 @@ fun chooseTargets(from: List<Group>, to: List<Group>) : Map<Group, Group> {
     return result
 }
 
-fun main(vararg args: String) {
-    loadGroups("src/main/resources/day24/input.txt")
+fun round(): Boolean {
+    val superGroup = mutableMapOf<Group, Group>()
+    val imnToInf = chooseTargets(immune, infect)
+    val infToImn = chooseTargets(infect, immune)
+    superGroup.putAll(imnToInf)
+    superGroup.putAll(infToImn)
+    val order = superGroup.keys.toList().sortedBy { it.initv }
+    order.forEach {attacker ->
+        if (attacker.isAlive()) {
+            val target = superGroup[attacker]
+            target?.receiveDamage(attacker.damageTo(target))
+        }
+    }
+    return immune.firstOrNull { it.isAlive() } != null && infect.firstOrNull { it.isAlive() } != null
+}
+
+fun dump() {
     println("Immune:")
     immune.forEach {
         println(it)
@@ -100,5 +119,13 @@ fun main(vararg args: String) {
     infect.forEach {
         println(it)
     }
+}
 
+fun main(vararg args: String) {
+    loadGroups("src/main/resources/day24/testInput.txt")
+    dump()
+    while(round()) {
+        dump()
+    }
+    dump()
 }
