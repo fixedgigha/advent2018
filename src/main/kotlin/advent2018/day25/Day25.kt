@@ -43,7 +43,6 @@ data class Game(val fileName:  String) {
             into.addAll(additions)
             additions.forEach { collectChildren(it, into) }
         }
-
     }
 
     val multiConstellations = mutableSetOf<Set<Coord>>()
